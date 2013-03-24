@@ -46,9 +46,6 @@
     			<version>2.7.1</version>
     			<configuration>
     				<targetJdk>1.7</targetJdk>
-    				<rulesets>
-    					<ruleset>tools/pmd-rules.xml</ruleset>
-    				</rulesets>
     			</configuration>
     		</plugin>
     		<plugin>
