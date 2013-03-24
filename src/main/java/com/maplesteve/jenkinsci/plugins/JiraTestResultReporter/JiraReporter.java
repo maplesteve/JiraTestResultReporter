@@ -2,54 +2,47 @@ package com.maplesteve.jenkinsci.plugins.JiraTestResultReporter;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
-// import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
-// import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-// import hudson.model.Result;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
 import org.kohsuke.stapler.DataBoundConstructor;
-// import org.kohsuke.stapler.StaplerRequest;
-// import org.kohsuke.stapler.QueryParameter;
 
-import org.apache.http.entity.StringEntity;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.HttpResponse;
+import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.AbstractHttpClient;
 
-// import java.io.BufferedReader;
 import java.io.IOException;
-// import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-// import javax.servlet.ServletException;
-
 import java.io.PrintStream;
+import java.net.MalformedURLException;
 import java.util.List;
 
 public class JiraReporter extends Notifier {
 
-    public final String configProjectKey;
-    public final String configServerAddress;
-    public final String configUsername;
-    public final String configPassword;
+    public String configProjectKey;
+    public String configServerAddress;
+    public String configUsername;
+    public String configPassword;
 
-    public final boolean configDebugFlag;
-    public final boolean configVerboseDebugFlag;
+    public boolean configDebugFlag;
+    public boolean configVerboseDebugFlag;
 
     public FilePath workspace;
 
+    public static final int JIRA_SUCCESS_CODE = 201;
+    
     public static final String PluginName = new String("[JiraTestResultReporter]");
     public final String prefixInfo = String.format("%s [INFO]", PluginName);
     public final String prefixDebug = String.format("%s [DEBUG]", PluginName);
@@ -171,7 +164,7 @@ public class JiraReporter extends Notifier {
                     HttpResponse response = httpClient.execute(postRequest);
                     debugLog(listener, String.format("statusLine: %s%n", response.getStatusLine()));
                     debugLog(listener, String.format("statusCode: %d%n", response.getStatusLine().getStatusCode()));
-                    if (response.getStatusLine().getStatusCode() != 201) {
+                    if (response.getStatusLine().getStatusCode() != JIRA_SUCCESS_CODE) {
                         throw new RuntimeException("[ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
                     }
 

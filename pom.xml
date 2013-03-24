@@ -38,18 +38,50 @@
   </properties>
 
   <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-release-plugin</artifactId>
-<!-- 
-        <configuration>
-          <goals>deploy</goals>
-        </configuration>
- -->
-      </plugin>
-    </plugins>
+	<pluginManagement>
+    	<plugins>
+    		<plugin>
+    			<groupId>org.apache.maven.plugins</groupId>
+    			<artifactId>maven-pmd-plugin</artifactId>
+    			<version>2.7.1</version>
+    			<configuration>
+    				<targetJdk>1.7</targetJdk>
+    				<rulesets>
+    					<ruleset>tools/pmd-rules.xml</ruleset>
+    				</rulesets>
+    			</configuration>
+    		</plugin>
+    		<plugin>
+    			<groupId>org.apache.maven.plugins</groupId>
+    			<artifactId>maven-compiler-plugin</artifactId>
+    			<version>2.5.1</version>
+    			<configuration>
+    				<source>1.7</source>
+    				<target>1.7</target>
+    			</configuration>
+    		</plugin>
+    		<plugin>
+    			<artifactId>maven-release-plugin</artifactId>
+    		</plugin>
+    	</plugins>
+  	</pluginManagement>
   </build>
   
+  <reporting>
+  	<plugins>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-pmd-plugin</artifactId>
+  			<version>2.7.1</version>
+  		</plugin>
+  		<plugin>
+  			<groupId>org.apache.maven.plugins</groupId>
+  			<artifactId>maven-jxr-plugin</artifactId>
+  			<version>2.3</version>
+  		</plugin>
+  	</plugins>
+  </reporting>
+
   <dependencies>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
