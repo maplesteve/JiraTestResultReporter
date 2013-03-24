@@ -49,8 +49,20 @@ public class JiraReporter extends Notifier {
     public final boolean verboseDebugFlag;
 
     public FilePath workspace;
+
+    public final String piName = new String ("[JiraTestResultReporter]");
+    public final String prefixInfo = String.format("%s [INFO]", piName);
+    public final String prefixDebug = String.format("%s [DEBUG]", piName);
+    public final String prefixDebugVerbose = String.format("%s [DEBUGVERBOSE]", piName);
+    public final String prefixError = String.format("%s [ERROR]", piName);
+
     @DataBoundConstructor
-    public JiraReporter(String projectKey, String serverAddress, String username, String password, boolean debugFlag, boolean verboseDebugFlag) {
+    public JiraReporter(String projectKey, 
+                        String serverAddress, 
+                        String username, 
+                        String password, 
+                        boolean debugFlag, 
+                        boolean verboseDebugFlag) {
         if (serverAddress.endsWith("/")) {
             this.serverAddress = serverAddress;
         } else {
@@ -61,7 +73,7 @@ public class JiraReporter extends Notifier {
         this.username = username;
         this.password = password;
 
-        this.verboseDebugFlag = verboseDebugFlag;       
+        this.verboseDebugFlag = verboseDebugFlag;
         if (verboseDebugFlag) {
             this.debugFlag = true;
         } else {
@@ -76,19 +88,21 @@ public class JiraReporter extends Notifier {
 
 
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener) {
+    public boolean perform( AbstractBuild build, 
+                            Launcher launcher, 
+                            BuildListener listener) {
         PrintStream logger = listener.getLogger();
-        logger.println("[JiraTestResultReporter] [INFO] Examining test results...");
+        logger.printf("%s Examining test results...", prefixInfo);
         debugLog(listener, String.format("Build result is %s%n", build.getResult().toString()));
         this.workspace = build.getWorkspace();
-        debugLog(listener, String.format("[JiraTestResultReporter] [INFO] Workspace is %s%n", this.workspace.toString()));
+        debugLog(listener, String.format("%s Workspace is %s%n", prefixInfo, this.workspace.toString()));
 //      if (build.getResult() == Result.UNSTABLE) {
             AbstractTestResultAction<?> testResultAction = build.getTestResultAction();
             List<CaseResult> failedTests = testResultAction.getFailedTests();
             printResultItems(failedTests, listener);
             createJiraIssue(failedTests, listener);
 //      }
-        logger.println("[JiraTestResultReporter] [INFO] Done.");
+        logger.printf("%s Done.", prefixInfo);
         return true;
     }
 
@@ -98,22 +112,22 @@ public class JiraReporter extends Notifier {
         }
         PrintStream oStream = listener.getLogger();
         for (CaseResult result : failedTests) {
-            oStream.printf("[JiraTestResultReporter] [DEBUG] projectKey: %s%n", this.projectKey);
-            oStream.printf("[JiraTestResultReporter] [DEBUG] errorDetails: %s%n", result.getErrorDetails());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] fullName: %s%n", result.getFullName());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] simpleName: %s%n", result.getSimpleName());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] title: %s%n", result.getTitle());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] packageName: %s%n", result.getPackageName());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] name: %s%n", result.getName());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] className: %s%n", result.getClassName());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] failedSince: %d%n", result.getFailedSince());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] status: %s%n", result.getStatus().toString());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] age: %s%n", result.getAge());
-            oStream.printf("[JiraTestResultReporter] [DEBUG] ErrorStackTrace: %s%n", result.getErrorStackTrace());
-            
+            oStream.printf("%s projectKey: %s%n", prefixDebug, this.projectKey);
+            oStream.printf("%s errorDetails: %s%n", prefixDebug, result.getErrorDetails());
+            oStream.printf("%s fullName: %s%n", prefixDebug, result.getFullName());
+            oStream.printf("%s simpleName: %s%n", prefixDebug, result.getSimpleName());
+            oStream.printf("%s title: %s%n", prefixDebug, result.getTitle());
+            oStream.printf("%s packageName: %s%n", prefixDebug, result.getPackageName());
+            oStream.printf("%s name: %s%n", prefixDebug, result.getName());
+            oStream.printf("%s className: %s%n", prefixDebug, result.getClassName());
+            oStream.printf("%s failedSince: %d%n", prefixDebug, result.getFailedSince());
+            oStream.printf("%s status: %s%n", prefixDebug, result.getStatus().toString());
+            oStream.printf("%s age: %s%n", prefixDebug, result.getAge());
+            oStream.printf("%s ErrorStackTrace: %s%n", prefixDebug, result.getErrorStackTrace());
+
             String affectedFile = result.getErrorStackTrace().replace(this.workspace.toString(), "");
-            oStream.printf("[JiraTestResultReporter] [DEBUG] affectedFile: %s%n", affectedFile);
-            oStream.printf("[JiraTestResultReporter] [DEBUG] ----------------------------%n");
+            oStream.printf("%s affectedFile: %s%n", prefixDebug, affectedFile);
+            oStream.printf("%s ----------------------------%n", prefixDebug);
         }
     }
 
@@ -122,8 +136,7 @@ public class JiraReporter extends Notifier {
             return;
         }
         PrintStream logger = listener.getLogger();
-        logger.print("[JiraTestResultReporter] [DEBUG] ");
-        logger.println(message);
+        logger.printf("%s %s%n", prefixDebug, message);
     }
 
      void createJiraIssue(List<CaseResult> failedTests, BuildListener listener) {
@@ -133,20 +146,18 @@ public class JiraReporter extends Notifier {
         for (CaseResult result : failedTests) {
             if (result.getAge() == 1) {
 //          if (result.getAge() > 0) {
-                
                 debugLog(listener, String.format("Creating issue in project %s at URL %s%n", this.projectKey, url));
 //              logger.printf("[JiraTestResultReporter] [DEBUG] Creating issue in project %s at URL %s%n", this.projectKey, url);
 
                 try {
                     DefaultHttpClient httpClient = new DefaultHttpClient();
-                
                     Credentials creds = new UsernamePasswordCredentials(this.username, this.password);
                     ((AbstractHttpClient) httpClient).getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
-                
+
                     HttpPost postRequest = new HttpPost(url);
 //                     String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.projectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace() + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
                     String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.projectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
-                    logger.printf("[JiraTestResultReporter] [DEBUGVERBOSE] JSON payload: ",jsonPayLoad);
+                    logger.printf("%s JSON payload: ", prefixDebugVerbose,jsonPayLoad);
                     StringEntity params = new StringEntity(jsonPayLoad);
                     params.setContentType("application/json");
                     postRequest.setEntity(params);
@@ -162,7 +173,7 @@ public class JiraReporter extends Notifier {
                     debugLog(listener, String.format("statusCode: %d%n", response.getStatusLine().getStatusCode()));
 //                  logger.printf("[JiraTestResultReporter] [DEBUG] statusCode: %d%n", response.getStatusLine().getStatusCode());
                     if (response.getStatusLine().getStatusCode() != 201) {
-                        throw new RuntimeException("[JiraTestResultReporter] [ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
+                        throw new RuntimeException("[ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
                     }
 
 //                  BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
@@ -178,7 +189,7 @@ public class JiraReporter extends Notifier {
                     e.printStackTrace();
                 }
             } else {
-                logger.printf("[JiraTestResultReporter] [INFO] This issue is old; not reporting.%n");
+                logger.printf("%s This issue is old; not reporting.%n", prefixInfo);
             }
         }
     }
