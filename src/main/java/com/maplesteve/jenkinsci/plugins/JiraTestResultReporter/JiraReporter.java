@@ -2,21 +2,21 @@ package com.maplesteve.jenkinsci.plugins.JiraTestResultReporter;
 import hudson.Launcher;
 import hudson.Extension;
 import hudson.FilePath;
-import hudson.util.FormValidation;
+// import hudson.util.FormValidation;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.AbstractProject;
-import hudson.tasks.Builder;
+// import hudson.tasks.Builder;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
-import hudson.model.Result;
+// import hudson.model.Result;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
 import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.QueryParameter;
+// import org.kohsuke.stapler.StaplerRequest;
+// import org.kohsuke.stapler.QueryParameter;
 
 import org.apache.http.entity.StringEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -29,28 +29,28 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.HttpResponse;
 import org.apache.http.impl.client.AbstractHttpClient;
 
-import java.io.BufferedReader;
+// import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+// import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import javax.servlet.ServletException;
+// import javax.servlet.ServletException;
 
 import java.io.PrintStream;
 import java.util.List;
 
 public class JiraReporter extends Notifier {
 
-    public final String projectKey;
-    public final String serverAddress;
-    public final String username;
-    public final String password;
+    public final String configProjectKey;
+    public final String configServerAddress;
+    public final String configUsername;
+    public final String configPassword;
 
-    public final boolean debugFlag;
-    public final boolean verboseDebugFlag;
+    public final boolean configDebugFlag;
+    public final boolean configVerboseDebugFlag;
 
     public FilePath workspace;
 
-    public final String piName = new String ("[JiraTestResultReporter]");
+    public final static String piName = new String("[JiraTestResultReporter]");
     public final String prefixInfo = String.format("%s [INFO]", piName);
     public final String prefixDebug = String.format("%s [DEBUG]", piName);
     public final String prefixDebugVerbose = String.format("%s [DEBUGVERBOSE]", piName);
@@ -64,20 +64,20 @@ public class JiraReporter extends Notifier {
                         boolean debugFlag, 
                         boolean verboseDebugFlag) {
         if (serverAddress.endsWith("/")) {
-            this.serverAddress = serverAddress;
+            this.configServerAddress = serverAddress;
         } else {
-            this.serverAddress = serverAddress + "/";
+            this.configServerAddress = serverAddress + "/";
         }
 
-        this.projectKey = projectKey;
-        this.username = username;
-        this.password = password;
+        this.configProjectKey = projectKey;
+        this.configUsername = username;
+        this.configPassword = password;
 
-        this.verboseDebugFlag = verboseDebugFlag;
+        this.configVerboseDebugFlag = verboseDebugFlag;
         if (verboseDebugFlag) {
-            this.debugFlag = true;
+            this.configDebugFlag = true;
         } else {
-            this.debugFlag = debugFlag;
+            this.configDebugFlag = debugFlag;
         }
     }
 
@@ -88,7 +88,7 @@ public class JiraReporter extends Notifier {
 
 
     @Override
-    public boolean perform( AbstractBuild build, 
+    public boolean perform(AbstractBuild build, 
                             Launcher launcher, 
                             BuildListener listener) {
         PrintStream logger = listener.getLogger();
@@ -107,12 +107,12 @@ public class JiraReporter extends Notifier {
     }
 
     private void printResultItems(List<CaseResult> failedTests, BuildListener listener) {
-        if (!this.debugFlag) {
+        if (!this.configDebugFlag) {
             return;
         }
         PrintStream oStream = listener.getLogger();
         for (CaseResult result : failedTests) {
-            oStream.printf("%s projectKey: %s%n", prefixDebug, this.projectKey);
+            oStream.printf("%s projectKey: %s%n", prefixDebug, this.configProjectKey);
             oStream.printf("%s errorDetails: %s%n", prefixDebug, result.getErrorDetails());
             oStream.printf("%s fullName: %s%n", prefixDebug, result.getFullName());
             oStream.printf("%s simpleName: %s%n", prefixDebug, result.getSimpleName());
@@ -132,7 +132,7 @@ public class JiraReporter extends Notifier {
     }
 
     void debugLog(BuildListener listener, String message) {
-        if (!this.debugFlag) {
+        if (!this.configDebugFlag) {
             return;
         }
         PrintStream logger = listener.getLogger();
@@ -141,47 +141,38 @@ public class JiraReporter extends Notifier {
 
      void createJiraIssue(List<CaseResult> failedTests, BuildListener listener) {
         PrintStream logger = listener.getLogger();
-        String url = serverAddress + "rest/api/2/issue/";
+        String url = this.configServerAddress + "rest/api/2/issue/";
 
         for (CaseResult result : failedTests) {
             if (result.getAge() == 1) {
 //          if (result.getAge() > 0) {
-                debugLog(listener, String.format("Creating issue in project %s at URL %s%n", this.projectKey, url));
+                debugLog(listener, String.format("Creating issue in project %s at URL %s%n", this.configProjectKey, url));
 //              logger.printf("[JiraTestResultReporter] [DEBUG] Creating issue in project %s at URL %s%n", this.projectKey, url);
 
                 try {
                     DefaultHttpClient httpClient = new DefaultHttpClient();
-                    Credentials creds = new UsernamePasswordCredentials(this.username, this.password);
+                    Credentials creds = new UsernamePasswordCredentials(this.configUsername, this.configPassword);
                     ((AbstractHttpClient) httpClient).getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
 
                     HttpPost postRequest = new HttpPost(url);
-//                     String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.projectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace() + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
-                    String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.projectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
-                    logger.printf("%s JSON payload: ", prefixDebugVerbose,jsonPayLoad);
+                    String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.configProjectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
+                    logger.printf("%s JSON payload: ", prefixDebugVerbose, jsonPayLoad);
                     StringEntity params = new StringEntity(jsonPayLoad);
                     params.setContentType("application/json");
                     postRequest.setEntity(params);
                     try {
-                        postRequest.addHeader(new BasicScheme().authenticate(new UsernamePasswordCredentials(this.username, this.password), postRequest));
+                        postRequest.addHeader(new BasicScheme().authenticate(new UsernamePasswordCredentials(this.configUsername, this.configPassword), postRequest));
                     } catch (AuthenticationException a) {
                         a.printStackTrace();
                     }
 
                     HttpResponse response = httpClient.execute(postRequest);
                     debugLog(listener, String.format("statusLine: %s%n", response.getStatusLine()));
-//                  logger.printf("[JiraTestResultReporter] [DEBUG] statusLine: %s%n", response.getStatusLine());
                     debugLog(listener, String.format("statusCode: %d%n", response.getStatusLine().getStatusCode()));
-//                  logger.printf("[JiraTestResultReporter] [DEBUG] statusCode: %d%n", response.getStatusLine().getStatusCode());
                     if (response.getStatusLine().getStatusCode() != 201) {
                         throw new RuntimeException("[ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
                     }
 
-//                  BufferedReader br = new BufferedReader(new InputStreamReader((response.getEntity().getContent())));
-//                  String output;
-//                  logger.println("Output from Server .... \n");
-//                  while ((output = br.readLine()) != null) {
-//                      logger.println(output);
-//                  }
                     httpClient.getConnectionManager().shutdown();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -196,7 +187,7 @@ public class JiraReporter extends Notifier {
 
     @Override
     public DescriptorImpl getDescriptor() {
-        return (DescriptorImpl)super.getDescriptor();
+        return (DescriptorImpl) super.getDescriptor();
     }
 
     @Extension
