@@ -31,18 +31,18 @@ import java.util.List;
 
 public class JiraReporter extends Notifier {
 
-    public String configProjectKey;
-    public String configServerAddress;
-    public String configUsername;
-    public String configPassword;
+    private String configProjectKey;
+    private String configServerAddress;
+    private String configUsername;
+    private String configPassword;
 
-    public boolean configDebugFlag;
-    public boolean configVerboseDebugFlag;
+    private boolean configDebugFlag;
+    private boolean configVerboseDebugFlag;
 
-    public FilePath workspace;
+    private FilePath workspace;
 
     public static final int JIRA_SUCCESS_CODE = 201;
-    
+
     public static final String PluginName = new String("[JiraTestResultReporter]");
     public final String prefixInfo = String.format("%s [INFO]", PluginName);
     public final String prefixDebug = String.format("%s [DEBUG]", PluginName);
