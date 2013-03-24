@@ -50,19 +50,19 @@ public class JiraReporter extends Notifier {
 
     public FilePath workspace;
 
-    public final static String piName = new String("[JiraTestResultReporter]");
-    public final String prefixInfo = String.format("%s [INFO]", piName);
-    public final String prefixDebug = String.format("%s [DEBUG]", piName);
-    public final String prefixDebugVerbose = String.format("%s [DEBUGVERBOSE]", piName);
-    public final String prefixError = String.format("%s [ERROR]", piName);
+    public static final String PluginName = new String("[JiraTestResultReporter]");
+    public final String prefixInfo = String.format("%s [INFO]", PluginName);
+    public final String prefixDebug = String.format("%s [DEBUG]", PluginName);
+    public final String prefixDebugVerbose = String.format("%s [DEBUGVERBOSE]", PluginName);
+    public final String prefixError = String.format("%s [ERROR]", PluginName);
 
     @DataBoundConstructor
-    public JiraReporter(String projectKey, 
-                        String serverAddress, 
-                        String username, 
-                        String password, 
-                        boolean debugFlag, 
-                        boolean verboseDebugFlag) {
+    public JiraReporter(final String projectKey,
+                        final String serverAddress,
+                        final String username,
+                        final String password,
+                        final boolean debugFlag,
+                        final boolean verboseDebugFlag) {
         if (serverAddress.endsWith("/")) {
             this.configServerAddress = serverAddress;
         } else {
@@ -88,9 +88,9 @@ public class JiraReporter extends Notifier {
 
 
     @Override
-    public boolean perform(AbstractBuild build, 
-                            Launcher launcher, 
-                            BuildListener listener) {
+    public boolean perform(final AbstractBuild build,
+                           final Launcher launcher,
+                           final BuildListener listener) {
         PrintStream logger = listener.getLogger();
         logger.printf("%s Examining test results...", prefixInfo);
         debugLog(listener, String.format("Build result is %s%n", build.getResult().toString()));
@@ -106,7 +106,8 @@ public class JiraReporter extends Notifier {
         return true;
     }
 
-    private void printResultItems(List<CaseResult> failedTests, BuildListener listener) {
+    private void printResultItems(final List<CaseResult> failedTests,
+                                  final BuildListener listener) {
         if (!this.configDebugFlag) {
             return;
         }
@@ -131,7 +132,7 @@ public class JiraReporter extends Notifier {
         }
     }
 
-    void debugLog(BuildListener listener, String message) {
+    void debugLog(final BuildListener listener, final String message) {
         if (!this.configDebugFlag) {
             return;
         }
@@ -139,7 +140,8 @@ public class JiraReporter extends Notifier {
         logger.printf("%s %s%n", prefixDebug, message);
     }
 
-     void createJiraIssue(List<CaseResult> failedTests, BuildListener listener) {
+     void createJiraIssue(final List<CaseResult> failedTests,
+                          final BuildListener listener) {
         PrintStream logger = listener.getLogger();
         String url = this.configServerAddress + "rest/api/2/issue/";
 
@@ -194,7 +196,7 @@ public class JiraReporter extends Notifier {
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 
         @Override
-        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+        public boolean isApplicable(final Class<? extends AbstractProject> jobType) {
             return true;
         }
 
