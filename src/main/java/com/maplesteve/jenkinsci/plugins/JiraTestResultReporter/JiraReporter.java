@@ -178,7 +178,7 @@ public class JiraReporter extends Notifier {
                                 response.getStatusLine().getStatusCode())
                             );
                     if (response.getStatusLine().getStatusCode() != JIRA_SUCCESS_CODE) {
-                        throw new RuntimeException("[ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
+                        throw new RuntimeException(this.prefixError + " Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
                     }
 
                     httpClient.getConnectionManager().shutdown();
