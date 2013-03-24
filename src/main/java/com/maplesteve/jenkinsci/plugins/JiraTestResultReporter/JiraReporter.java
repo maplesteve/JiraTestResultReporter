@@ -41,13 +41,13 @@ public class JiraReporter extends Notifier {
 
     private FilePath workspace;
 
-    public static final int JIRA_SUCCESS_CODE = 201;
+    private static final int JIRA_SUCCESS_CODE = 201;
 
-    public static final String PluginName = new String("[JiraTestResultReporter]");
-    public final String prefixInfo = String.format("%s [INFO]", PluginName);
-    public final String prefixDebug = String.format("%s [DEBUG]", PluginName);
-    public final String prefixDebugVerbose = String.format("%s [DEBUGVERBOSE]", PluginName);
-    public final String prefixError = String.format("%s [ERROR]", PluginName);
+    private static final String PluginName = new String("[JiraTestResultReporter]");
+    private final String pInfo = String.format("%s [INFO]", PluginName);
+    private final String pDebug = String.format("%s [DEBUG]", PluginName);
+    private final String pVerbose = String.format("%s [DEBUGVERBOSE]", PluginName);
+    private final String prefixError = String.format("%s [ERROR]", PluginName);
 
     @DataBoundConstructor
     public JiraReporter(final String projectKey,
@@ -85,17 +85,23 @@ public class JiraReporter extends Notifier {
                            final Launcher launcher,
                            final BuildListener listener) {
         PrintStream logger = listener.getLogger();
-        logger.printf("%s Examining test results...", prefixInfo);
-        debugLog(listener, String.format("Build result is %s%n", build.getResult().toString()));
+        logger.printf("%s Examining test results...", pInfo);
+        debugLog(listener,
+                 String.format("Build result is %s%n",
+                    build.getResult().toString())
+                );
         this.workspace = build.getWorkspace();
-        debugLog(listener, String.format("%s Workspace is %s%n", prefixInfo, this.workspace.toString()));
+        debugLog(listener,
+                 String.format("%s Workspace is %s%n",
+                    pInfo, this.workspace.toString())
+                );
 //      if (build.getResult() == Result.UNSTABLE) {
             AbstractTestResultAction<?> testResultAction = build.getTestResultAction();
             List<CaseResult> failedTests = testResultAction.getFailedTests();
             printResultItems(failedTests, listener);
             createJiraIssue(failedTests, listener);
 //      }
-        logger.printf("%s Done.", prefixInfo);
+        logger.printf("%s Done.", pInfo);
         return true;
     }
 
@@ -104,24 +110,24 @@ public class JiraReporter extends Notifier {
         if (!this.configDebugFlag) {
             return;
         }
-        PrintStream oStream = listener.getLogger();
+        PrintStream out = listener.getLogger();
         for (CaseResult result : failedTests) {
-            oStream.printf("%s projectKey: %s%n", prefixDebug, this.configProjectKey);
-            oStream.printf("%s errorDetails: %s%n", prefixDebug, result.getErrorDetails());
-            oStream.printf("%s fullName: %s%n", prefixDebug, result.getFullName());
-            oStream.printf("%s simpleName: %s%n", prefixDebug, result.getSimpleName());
-            oStream.printf("%s title: %s%n", prefixDebug, result.getTitle());
-            oStream.printf("%s packageName: %s%n", prefixDebug, result.getPackageName());
-            oStream.printf("%s name: %s%n", prefixDebug, result.getName());
-            oStream.printf("%s className: %s%n", prefixDebug, result.getClassName());
-            oStream.printf("%s failedSince: %d%n", prefixDebug, result.getFailedSince());
-            oStream.printf("%s status: %s%n", prefixDebug, result.getStatus().toString());
-            oStream.printf("%s age: %s%n", prefixDebug, result.getAge());
-            oStream.printf("%s ErrorStackTrace: %s%n", prefixDebug, result.getErrorStackTrace());
+            out.printf("%s projectKey: %s%n", pDebug, this.configProjectKey);
+            out.printf("%s errorDetails: %s%n", pDebug, result.getErrorDetails());
+            out.printf("%s fullName: %s%n", pDebug, result.getFullName());
+            out.printf("%s simpleName: %s%n", pDebug, result.getSimpleName());
+            out.printf("%s title: %s%n", pDebug, result.getTitle());
+            out.printf("%s packageName: %s%n", pDebug, result.getPackageName());
+            out.printf("%s name: %s%n", pDebug, result.getName());
+            out.printf("%s className: %s%n", pDebug, result.getClassName());
+            out.printf("%s failedSince: %d%n", pDebug, result.getFailedSince());
+            out.printf("%s status: %s%n", pDebug, result.getStatus().toString());
+            out.printf("%s age: %s%n", pDebug, result.getAge());
+            out.printf("%s ErrorStackTrace: %s%n", pDebug, result.getErrorStackTrace());
 
             String affectedFile = result.getErrorStackTrace().replace(this.workspace.toString(), "");
-            oStream.printf("%s affectedFile: %s%n", prefixDebug, affectedFile);
-            oStream.printf("%s ----------------------------%n", prefixDebug);
+            out.printf("%s affectedFile: %s%n", pDebug, affectedFile);
+            out.printf("%s ----------------------------%n", pDebug);
         }
     }
 
@@ -130,7 +136,7 @@ public class JiraReporter extends Notifier {
             return;
         }
         PrintStream logger = listener.getLogger();
-        logger.printf("%s %s%n", prefixDebug, message);
+        logger.printf("%s %s%n", pDebug, message);
     }
 
      void createJiraIssue(final List<CaseResult> failedTests,
@@ -141,9 +147,10 @@ public class JiraReporter extends Notifier {
         for (CaseResult result : failedTests) {
             if (result.getAge() == 1) {
 //          if (result.getAge() > 0) {
-                debugLog(listener, String.format("Creating issue in project %s at URL %s%n", this.configProjectKey, url));
-//              logger.printf("[JiraTestResultReporter] [DEBUG] Creating issue in project %s at URL %s%n", this.projectKey, url);
-
+                debugLog(listener,
+                         String.format("Creating issue in project %s at URL %s%n",
+                            this.configProjectKey, url)
+                        );
                 try {
                     DefaultHttpClient httpClient = new DefaultHttpClient();
                     Credentials creds = new UsernamePasswordCredentials(this.configUsername, this.configPassword);
@@ -151,7 +158,7 @@ public class JiraReporter extends Notifier {
 
                     HttpPost postRequest = new HttpPost(url);
                     String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.configProjectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
-                    logger.printf("%s JSON payload: ", prefixDebugVerbose, jsonPayLoad);
+                    logger.printf("%s JSON payload: ", pVerbose, jsonPayLoad);
                     StringEntity params = new StringEntity(jsonPayLoad);
                     params.setContentType("application/json");
                     postRequest.setEntity(params);
@@ -162,8 +169,14 @@ public class JiraReporter extends Notifier {
                     }
 
                     HttpResponse response = httpClient.execute(postRequest);
-                    debugLog(listener, String.format("statusLine: %s%n", response.getStatusLine()));
-                    debugLog(listener, String.format("statusCode: %d%n", response.getStatusLine().getStatusCode()));
+                    debugLog(listener,
+                             String.format("statusLine: %s%n",
+                                response.getStatusLine())
+                            );
+                    debugLog(listener,
+                             String.format("statusCode: %d%n",
+                                response.getStatusLine().getStatusCode())
+                            );
                     if (response.getStatusLine().getStatusCode() != JIRA_SUCCESS_CODE) {
                         throw new RuntimeException("[ERROR] Failed : HTTP error code : " + response.getStatusLine().getStatusCode());
                     }
@@ -175,7 +188,7 @@ public class JiraReporter extends Notifier {
                     e.printStackTrace();
                 }
             } else {
-                logger.printf("%s This issue is old; not reporting.%n", prefixInfo);
+                logger.printf("%s This issue is old; not reporting.%n", pInfo);
             }
         }
     }
