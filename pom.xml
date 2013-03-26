@@ -6,7 +6,9 @@
     <version>1.480</version><!-- which version of Jenkins is this plugin built against? -->
   </parent>
 
+<!-- 
   <groupId>com.maplesteve.jenkins-ci.plugins</groupId>
+ -->
   <artifactId>JiraTestResultReporter</artifactId>
   <version>1.0.3-SNAPSHOT</version>
   <packaging>hpi</packaging>
