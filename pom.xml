@@ -23,14 +23,9 @@
   <url>http://wiki.jenkins-ci.org/display/JENKINS/JiraTestResultReporter</url>
 
   <scm>
-<!-- 
-    <connection>scm:git:ssh://github.com/jenkinsci/JiraTestResultReporter.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/JiraTestResultReporter.git</developerConnection>
-    <url>https://github.com/jenkinsci/JiraTestResultReporter</url>
- -->
-    <connection>scm:git:ssh://github.com/maplesteve/JiraTestResultReporter.git</connection>
-    <developerConnection>scm:git:ssh://git@github.com/maplesteve/JiraTestResultReporter.git</developerConnection>
-    <url>https://github.com/maplesteve/JiraTestResultReporter</url>
+    <connection>scm:git:ssh://github.com/jenkinsci/JiraTestResultReporter-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/JiraTestResultReporter-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/JiraTestResultReporter-plugin</url>
   </scm>
     
   <properties>
@@ -38,45 +33,45 @@
   </properties>
 
   <build>
-	<pluginManagement>
-    	<plugins>
-    		<plugin>
-    			<groupId>org.apache.maven.plugins</groupId>
-    			<artifactId>maven-pmd-plugin</artifactId>
-    			<version>2.7.1</version>
-    			<configuration>
-    				<targetJdk>1.7</targetJdk>
-    			</configuration>
-    		</plugin>
-    		<plugin>
-    			<groupId>org.apache.maven.plugins</groupId>
-    			<artifactId>maven-compiler-plugin</artifactId>
-    			<version>2.5.1</version>
-    			<configuration>
-    				<source>1.7</source>
-    				<target>1.7</target>
-    			</configuration>
-    		</plugin>
-    		<plugin>
-    			<artifactId>maven-release-plugin</artifactId>
-    		</plugin>
-    	</plugins>
-  	</pluginManagement>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-pmd-plugin</artifactId>
+          <version>2.7.1</version>
+          <configuration>
+            <targetJdk>1.7</targetJdk>
+          </configuration>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.5.1</version>
+          <configuration>
+            <source>1.7</source>
+            <target>1.7</target>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-release-plugin</artifactId>
+        </plugin>
+      </plugins>
+    </pluginManagement>
   </build>
-  
+
   <reporting>
-  	<plugins>
-  		<plugin>
-  			<groupId>org.apache.maven.plugins</groupId>
-  			<artifactId>maven-pmd-plugin</artifactId>
-  			<version>2.7.1</version>
-  		</plugin>
-  		<plugin>
-  			<groupId>org.apache.maven.plugins</groupId>
-  			<artifactId>maven-jxr-plugin</artifactId>
-  			<version>2.3</version>
-  		</plugin>
-  	</plugins>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-pmd-plugin</artifactId>
+        <version>2.7.1</version>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jxr-plugin</artifactId>
+        <version>2.3</version>
+      </plugin>
+    </plugins>
   </reporting>
 
   <dependencies>
@@ -86,8 +81,8 @@
       <version>4.2.3</version>
       <scope>compile</scope>
     </dependency>
-  </dependencies>  
-  
+  </dependencies>
+
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
     <repository>
