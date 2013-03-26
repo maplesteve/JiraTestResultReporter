@@ -9,6 +9,7 @@
 <!-- 
   <groupId>com.maplesteve.jenkins-ci.plugins</groupId>
  -->
+  <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>JiraTestResultReporter</artifactId>
   <version>1.0.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
