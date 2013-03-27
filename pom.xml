@@ -20,7 +20,7 @@
     </developer>
   </developers>
   
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/JiraTestResultReporter</url>
+  <url>https://wiki.jenkins-ci.org/display/JENKINS/JiraTestResultReporter-plugin</url>
 
   <scm>
     <connection>scm:git:ssh://github.com/jenkinsci/JiraTestResultReporter-plugin.git</connection>
