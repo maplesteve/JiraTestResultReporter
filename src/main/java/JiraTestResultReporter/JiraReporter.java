@@ -11,7 +11,9 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
+import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthenticationException;
@@ -27,6 +29,7 @@ import org.apache.http.impl.client.AbstractHttpClient;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 public class JiraReporter extends Notifier {
@@ -209,6 +212,28 @@ public class JiraReporter extends Notifier {
         @Override
         public String getDisplayName() {
             return "Jira Test Result Reporter";
+        }
+        
+        public FormValidation doCheckProjectKey(@QueryParameter String value) {
+        	if (value.isEmpty()) {
+        		return FormValidation.error("You must provide a project key.");
+        	} else {
+        		return FormValidation.ok();
+        	}
+        }
+
+        public FormValidation doCheckServerAddress(@QueryParameter String value) {
+        	if (value.isEmpty()) {
+        		return FormValidation.error("You must provide an URL.");
+        	}
+        	
+        	try {
+        		new URL(value);
+        	} catch (final MalformedURLException e) {
+        		return FormValidation.error("This is not a valid URL.");
+        	}
+        	
+        	return FormValidation.ok();
         }
     }
 }
