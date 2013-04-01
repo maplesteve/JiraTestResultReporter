@@ -41,6 +41,7 @@ public class JiraReporter extends Notifier {
 
     public boolean debugFlag;
     public boolean verboseDebugFlag;
+    public boolean createAllFlag;
 
     private FilePath workspace;
 
@@ -57,6 +58,7 @@ public class JiraReporter extends Notifier {
                         String serverAddress,
                         String username,
                         String password,
+                        boolean createAllFlag,
                         boolean debugFlag,
                         boolean verboseDebugFlag) {
         if (serverAddress.endsWith("/")) {
@@ -75,6 +77,8 @@ public class JiraReporter extends Notifier {
         } else {
             this.debugFlag = debugFlag;
         }
+        
+        this.createAllFlag = createAllFlag;
     }
 
     @Override
@@ -147,7 +151,7 @@ public class JiraReporter extends Notifier {
         String url = this.serverAddress + "rest/api/2/issue/";
 
         for (CaseResult result : failedTests) {
-            if (result.getAge() == 1) {
+            if ((result.getAge() == 1) || (this.createAllFlag)) {
 //          if (result.getAge() > 0) {
                 debugLog(listener,
                          String.format("Creating issue in project %s at URL %s%n",
