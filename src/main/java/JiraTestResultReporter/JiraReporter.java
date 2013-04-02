@@ -11,7 +11,9 @@ import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.AbstractTestResultAction;
+import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthenticationException;
@@ -27,6 +29,7 @@ import org.apache.http.impl.client.AbstractHttpClient;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
 
 public class JiraReporter extends Notifier {
@@ -38,6 +41,7 @@ public class JiraReporter extends Notifier {
 
     public boolean debugFlag;
     public boolean verboseDebugFlag;
+    public boolean createAllFlag;
 
     private FilePath workspace;
 
@@ -54,6 +58,7 @@ public class JiraReporter extends Notifier {
                         String serverAddress,
                         String username,
                         String password,
+                        boolean createAllFlag,
                         boolean debugFlag,
                         boolean verboseDebugFlag) {
         if (serverAddress.endsWith("/")) {
@@ -72,6 +77,8 @@ public class JiraReporter extends Notifier {
         } else {
             this.debugFlag = debugFlag;
         }
+        
+        this.createAllFlag = createAllFlag;
     }
 
     @Override
@@ -144,7 +151,7 @@ public class JiraReporter extends Notifier {
         String url = this.serverAddress + "rest/api/2/issue/";
 
         for (CaseResult result : failedTests) {
-            if (result.getAge() == 1) {
+            if ((result.getAge() == 1) || (this.createAllFlag)) {
 //          if (result.getAge() > 0) {
                 debugLog(listener,
                          String.format("Creating issue in project %s at URL %s%n",
@@ -209,6 +216,28 @@ public class JiraReporter extends Notifier {
         @Override
         public String getDisplayName() {
             return "Jira Test Result Reporter";
+        }
+        
+        public FormValidation doCheckProjectKey(@QueryParameter String value) {
+        	if (value.isEmpty()) {
+        		return FormValidation.error("You must provide a project key.");
+        	} else {
+        		return FormValidation.ok();
+        	}
+        }
+
+        public FormValidation doCheckServerAddress(@QueryParameter String value) {
+        	if (value.isEmpty()) {
+        		return FormValidation.error("You must provide an URL.");
+        	}
+        	
+        	try {
+        		new URL(value);
+        	} catch (final MalformedURLException e) {
+        		return FormValidation.error("This is not a valid URL.");
+        	}
+        	
+        	return FormValidation.ok();
         }
     }
 }
