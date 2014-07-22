@@ -102,7 +102,7 @@ public class JiraReporter extends Notifier {
                  String.format("%s Workspace is %s%n", pInfo, this.workspace.toString())
                 );
 //      if (build.getResult() == Result.UNSTABLE) {
-            AbstractTestResultAction<?> testResultAction = build.getTestResultAction();
+            AbstractTestResultAction<?> testResultAction = build.getAction(AbstractTestResultAction.class);
             List<CaseResult> failedTests = testResultAction.getFailedTests();
             printResultItems(failedTests, listener);
             createJiraIssue(failedTests, listener);
