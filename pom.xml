@@ -81,6 +81,11 @@
       <version>4.2.3</version>
       <scope>compile</scope>
     </dependency>
+    <dependency>
+      <groupId>org.glassfish</groupId>
+      <artifactId>javax.json</artifactId>
+      <version>1.0.4</version>
+    </dependency>
   </dependencies>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->

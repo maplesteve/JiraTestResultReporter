@@ -28,9 +28,11 @@ import org.apache.http.impl.client.AbstractHttpClient;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.StringWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import javax.json.*;
 
 public class JiraReporter extends Notifier {
 
@@ -163,7 +165,22 @@ public class JiraReporter extends Notifier {
                     ((AbstractHttpClient) httpClient).getCredentialsProvider().setCredentials(AuthScope.ANY, creds);
 
                     HttpPost postRequest = new HttpPost(url);
-                    String jsonPayLoad = new String("{\"fields\": {\"project\": {\"key\": \"" + this.projectKey + "\"},\"summary\": \"The test " + result.getName() + " failed " + result.getClassName() + ": " + result.getErrorDetails() + "\",\"description\": \"Test class: " + result.getClassName() + " -- " + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\",\"issuetype\": {\"name\": \"Bug\"}}}");
+                    String summary = "Test " + result.getName() + " failed";
+                    String description = "Test class: " + result.getClassName() + "\n\n" +
+                                         "{noformat}\n" + result.getErrorDetails() + "\n{noformat}\n\n" +
+                                         "{noformat}\n" + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\n{noformat}\n\n";
+                    JsonObjectBuilder issuetype = Json.createObjectBuilder().add("name", "Bug");
+                    JsonObjectBuilder project = Json.createObjectBuilder().add("key", this.projectKey);
+                    JsonObjectBuilder fields = Json.createObjectBuilder().add("project", project)
+                                                                  .add("summary", summary)
+                                                                  .add("description", description)
+                                                                  .add("issuetype", issuetype);
+                    JsonObjectBuilder payload = Json.createObjectBuilder().add("fields", fields);
+                    StringWriter stWriter = new StringWriter();
+                    JsonWriter jsonWriter = Json.createWriter(stWriter);
+                    jsonWriter.writeObject(payload.build());
+                    jsonWriter.close();
+                    String jsonPayLoad = stWriter.toString();
 //                     logger.printf("%s JSON payload: %n", pVerbose, jsonPayLoad);
                     logger.printf("%s Reporting issue.%n", pInfo);
                     StringEntity params = new StringEntity(jsonPayLoad);
