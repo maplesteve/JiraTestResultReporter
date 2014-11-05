@@ -45,7 +45,7 @@ public class JiraReporter extends Notifier {
     public boolean verboseDebugFlag;
     public boolean createAllFlag;
 
-    private FilePath workspace;
+    private transient FilePath workspace;
 
     private static final int JIRA_SUCCESS_CODE = 201;
 
