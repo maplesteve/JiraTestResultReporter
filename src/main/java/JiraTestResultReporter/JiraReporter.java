@@ -103,13 +103,16 @@ public class JiraReporter extends Notifier {
         debugLog(listener,
                  String.format("%s Workspace is %s%n", pInfo, this.workspace.toString())
                 );
-//      if (build.getResult() == Result.UNSTABLE) {
-            AbstractTestResultAction<?> testResultAction = build.getAction(AbstractTestResultAction.class);
+        AbstractTestResultAction<?> testResultAction = build.getAction(AbstractTestResultAction.class);
+        if (testResultAction == null) {
+            logger.printf("%s no test results found; nothing to do.%n", pInfo);
+        }
+        else {
             List<CaseResult> failedTests = testResultAction.getFailedTests();
             printResultItems(failedTests, listener);
             createJiraIssue(failedTests, listener);
-//      }
-        logger.printf("%s Done.%n", pInfo);
+            logger.printf("%s Done.%n", pInfo);
+        }
         return true;
     }
 
