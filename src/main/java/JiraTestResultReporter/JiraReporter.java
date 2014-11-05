@@ -110,7 +110,7 @@ public class JiraReporter extends Notifier {
         else {
             List<CaseResult> failedTests = testResultAction.getFailedTests();
             printResultItems(failedTests, listener);
-            createJiraIssue(failedTests, listener);
+            createJiraIssue(failedTests, build, listener);
             logger.printf("%s Done.%n", pInfo);
         }
         return true;
@@ -151,6 +151,7 @@ public class JiraReporter extends Notifier {
     }
 
      void createJiraIssue(final List<CaseResult> failedTests,
+                          final AbstractBuild build,
                           final BuildListener listener) {
         PrintStream logger = listener.getLogger();
         String url = this.serverAddress + "rest/api/2/issue/";
@@ -170,6 +171,7 @@ public class JiraReporter extends Notifier {
                     HttpPost postRequest = new HttpPost(url);
                     String summary = "Test " + result.getName() + " failed";
                     String description = "Test class: " + result.getClassName() + "\n\n" +
+                                         "Jenkins job: " + build.getAbsoluteUrl() + "\n\n" +
                                          "{noformat}\n" + result.getErrorDetails() + "\n{noformat}\n\n" +
                                          "{noformat}\n" + result.getErrorStackTrace().replace(this.workspace.toString(), "") + "\n{noformat}\n\n";
                     JsonObjectBuilder issuetype = Json.createObjectBuilder().add("name", "Bug");
