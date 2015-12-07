@@ -10,6 +10,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.util.FormValidation;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -103,7 +104,7 @@ public class JiraReporter extends Notifier {
         debugLog(listener,
                  String.format("%s Workspace is %s%n", pInfo, this.workspace.toString())
                 );
-        AbstractTestResultAction<?> testResultAction = build.getAction(AbstractTestResultAction.class);
+        TestResultAction testResultAction = (TestResultAction)build.getAction(AbstractTestResultAction.class);
         if (testResultAction == null) {
             logger.printf("%s no test results found; nothing to do.%n", pInfo);
         }
