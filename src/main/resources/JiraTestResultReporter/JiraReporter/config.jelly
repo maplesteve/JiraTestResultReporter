@@ -20,4 +20,9 @@
   <f:entry title="Log VERBOSE debug info" field="verboseDebugFlag">
     <f:checkbox field="verboseDebugFlag" checked="${verboseDebugFlag}"/>
   </f:entry>
+
+  <f:entry title="Resolve issues for successful tests" field="resolveIssueFlag">
+    <f:checkbox field="resolveIssueFlag" checked="${resolveIssueFlag}"/>
+  </f:entry>
+
 </j:jelly>

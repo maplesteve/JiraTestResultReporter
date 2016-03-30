@@ -2,5 +2,5 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-This plugin creates issues in Jira for failed unit tests.
+This plugin creates issues in Jira for failed unit tests. It also resolves the issue once its fixed.
 </div>
