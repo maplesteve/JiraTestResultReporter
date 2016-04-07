@@ -16,12 +16,11 @@
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
 import com.atlassian.jira.rest.client.api.*;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
-import com.atlassian.jira.rest.client.api.domain.IssueType;
+import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.api.domain.Project;
-import com.atlassian.jira.rest.client.api.domain.ServerInfo;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
@@ -35,7 +34,6 @@ import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.codehaus.jettison.json.JSONException;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.StringFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
@@ -92,6 +90,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return JobConfigMapping.getInstance().getAutoRaiseIssue(getJobName());
     }
 
+    public boolean getAutoResolveIssue() {
+        return JobConfigMapping.getInstance().getAutoResolveIssue(getJobName());
+    }
+
     /**
      * Getter for the project associated with this publisher
      * @return
@@ -107,7 +109,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      * @param issueType
      */
 	@DataBoundConstructor
-	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType, boolean autoRaiseIssue) {
+	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
+                                 boolean autoRaiseIssue, boolean autoResolveIssue) {
         AbstractProject project = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
         TestToIssueMapping.getInstance().register(project);
         long defaultIssueType;
@@ -117,7 +120,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         catch (NumberFormatException e) {
             defaultIssueType = 1L;
         }
-        JobConfigMapping.getInstance().saveConfig(project, projectKey, defaultIssueType, Util.fixNull(configs), autoRaiseIssue);
+        JobConfigMapping.getInstance()
+                .saveConfig(project, projectKey, defaultIssueType, Util.fixNull(configs), autoRaiseIssue, autoResolveIssue);
 	}
 
     /**
@@ -149,8 +153,40 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
             raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
+
+        if(JobConfigMapping.getInstance().getAutoResolveIssue(project)) {
+            resolveIssues(listener, project, job, envVars, getTestCaseResults(testResult));
+        }
         return new JiraTestData(envVars);
 	}
+
+    private void resolveIssues(TaskListener listener, AbstractProject project, Job job,
+                               EnvVars envVars, List<CaseResult> testCaseResults) {
+
+        for(CaseResult test : testCaseResults) {
+            if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
+                    && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+                synchronized (test.getId()) {
+                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+                    IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
+                    Issue issue = issueRestClient.getIssue(issueKey).claim();
+                    boolean transitionExecuted = false;
+                    for (Transition transition : issueRestClient.getTransitions(issue).claim()) {
+                        if (transition.getName().toLowerCase().contains("resolve")) {
+                            issueRestClient.transition(issue, new TransitionInput(transition.getId()));
+                            transitionExecuted = true;
+                            break;
+                        }
+                    }
+
+                    if (!transitionExecuted) {
+                        listener.getLogger().println("Could not find transition to resolve issue " + issueKey);
+                    }
+
+                }
+            }
+        }
+    }
 
     private void raiseIssues(TaskListener listener, AbstractProject project, Job job,
                              EnvVars envVars,List<CaseResult> testCaseResults) {
