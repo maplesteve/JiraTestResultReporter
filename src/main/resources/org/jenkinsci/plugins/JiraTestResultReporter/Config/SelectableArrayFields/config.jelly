@@ -1,0 +1,17 @@
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:entry field="fieldKey">
+        <f:select/>
+    </f:entry>
+    <f:entry>
+        <f:repeatable var="fieldVar" varStatus="fieldStatus" name="values" items="${instance.values}" minimum="1" add="Add Value">
+            <table width="100%">
+                <f:entry field="value">
+                    <f:select default="${fieldVar.value}"/>
+                </f:entry>
+                <f:entry>
+                    <input type="button" value="Delete" class="repeatable-delete show-if-not-only"/>
+                </f:entry>
+            </table>
+        </f:repeatable>
+    </f:entry>
+</j:jelly>

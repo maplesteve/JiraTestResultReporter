@@ -1,0 +1,102 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+    <j:choose>
+        <j:when test="${ descriptor.jiraUri != null }">
+            <f:entry title="Project Key" field="projectKey">
+                <f:textbox/>
+            </f:entry>
+            <f:validateButton title="Validate settings"
+                              method="validateProjectKey" with="projectKey" />
+            <f:entry title="Issue Type" field="issueType">
+                <f:select/>
+            </f:entry>
+            <f:entry title="Auto raise issues" field="autoRaiseIssue" >
+                <f:checkbox/>
+            </f:entry>
+
+            <f:advanced>
+                <j:set var="items" value="${ instance.configs != null ? instance.configs : descriptor.templates }"/>
+                <f:entry field="configs">
+                    <f:hetero-list name="configs"
+                                   hasHeader="true"
+                                   descriptors="${descriptor.listDescriptors}"
+                                   items="${items}"
+                                   addCaption="Add Field Configuration"
+                            />
+                </f:entry>
+                <f:entry>
+                    <div  align="right">
+                        <span class="yui-button yui-push-button yui-button">
+                            <button id="validateJiraIssueConfig" type="button" onClick="validateFieldConfings()">Validate Fields</button>
+                        </span>
+                        <img src="${imagesURL}/16x16/help.png" style="width: 16px; height: 16px; cursor:pointer" onClick="hideshow(document.getElementById('helpValidateJiraIssueConfig'))"/>
+                        <img src="${imagesURL}/spinner.gif" style="display:none" id="jiraSpinner"/>
+                    </div>
+                    <div id="helpValidateJiraIssueConfig" class="help" style="display:none">
+                        <p>Since Jira Rest API does not offer a way to validate field values, the plugin will try to create and delete an issue
+                            and it will print the errors (if any).</p>
+                        <p><b>WARNING: The user configured in the global configuration page needs to have permission to delete issues.</b></p>
+                        <p>Variables will not be expanded.</p>
+                    </div>
+                </f:entry>
+            </f:advanced>
+            <f:entry>
+                <div id="JiraIssueConfigErrors">
+                </div>
+            </f:entry>
+        </j:when>
+        <j:otherwise>
+            <f:entry>
+                <div class="error">
+                    No jira site configured.<br/>
+                    Please do so from <a href="${rootURL}/configure" target="_new">the system configuration</a>.
+                </div>
+            </f:entry>
+        </j:otherwise>
+    </j:choose>
+
+    <script>
+        /*
+        Ugly hack part 1. See JiraTestDataPublisherDescriptor.validateFieldConfigs for part2.
+        Since Jenkins does not offer a way to send the hetero-list for validation, I'm constructing
+        the whole form and sending it.
+        */
+        function validateFieldConfings() {
+            var errorDiv = document.getElementById('JiraIssueConfigErrors');
+            spinner = document.getElementById('jiraSpinner');
+            spinner.style.display = "inline"
+            var form = document.getElementsByName("config")[0];
+            buildFormTree(form);
+            var jsonElement = null;
+            for( var i=0; i != form.elements.length; i++ ) {
+                var e = form.elements[i];
+                if(e.name == "json") {
+                    jsonElement = e;
+                    break;
+                }
+            }
+
+            var descriptor = <st:bind value="${descriptor}"/>
+            var socketTimeout = setTimeout( function() {
+                spinner.style.display = "none"
+                errorDiv.innerHTML = "Validation Failed: Socket Timeout. The issue was probably created, but the server did not respond in a timely manner. Please try again.";
+                }, 30000);
+            descriptor.validateFieldConfigs(jsonElement.value, function(rsp) {
+                clearTimeout(socketTimeout);
+                spinner.style.display = "none"
+                applyErrorMessage(errorDiv, rsp);
+            });
+        }
+
+
+        function hideshow(which){
+            if (!document.getElementById)
+                return
+            if (which.style.display=="block")
+                which.style.display="none"
+            else
+                which.style.display="block"
+        }
+
+    </script>
+</j:jelly>

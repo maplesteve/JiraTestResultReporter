@@ -1,0 +1,29 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core"
+         xmlns:f="/lib/form">
+
+    <f:section title="JiraTestResultReporter">
+
+        <f:entry title="Jira URL">
+            <f:textbox field="jiraUrl"/>
+        </f:entry>
+
+        <f:entry title="Username">
+            <f:textbox field="username"/>
+        </f:entry>
+
+        <f:entry title="Password">
+            <f:password field="password"/>
+        </f:entry>
+        <f:validateButton title="Validate settings"
+                          method="validateGlobal" with="jiraUrl,username,password" />
+        <f:advanced>
+            <f:entry title="Default Summary" field="summary">
+                <f:textbox field="summary" default="${descriptor.defaultSummary}"/>
+            </f:entry>
+            <f:entry title="Default Description" field="description" >
+                <f:textbox field="description" default="${descriptor.defaultDescription}"/>
+            </f:entry>
+        </f:advanced>
+    </f:section>
+</j:jelly>

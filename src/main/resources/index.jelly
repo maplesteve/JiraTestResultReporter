@@ -1,6 +1,4 @@
-<!--
-  This view is used to render the installed plugins page.
--->
+<?jelly escape-by-default='true'?>
 <div>
-This plugin creates issues in Jira for failed unit tests. It also resolves the issue once its fixed.
+  Plugin for creating JIRA issues directly from Jenkins and linking JIRA issues to JUnit tests.
 </div>
