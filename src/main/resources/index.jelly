@@ -1,4 +1,4 @@
 <?jelly escape-by-default='true'?>
 <div>
-  Plugin for creating JIRA issues directly from Jenkins and linking JIRA issues to JUnit tests.
+  Plugin for creating JIRA issues directly from Jenkins and linking them to JUnit tests.
 </div>

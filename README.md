@@ -32,7 +32,9 @@ Insert the **Project key** in the respective field. Again, highly recommended to
 After setting the project key the **Issue type** select will be populated with the available issue types for that specific project.
 
 If you check the **Auto raise issue** check box, this plugin will create and link issues for all the failing tests in new builds that don't already have linked issues.
- 
+
+Checking **Auto resolve issue** check box will enable an experimental feature. Basically, if you had a test that was failing and you had a linked Jira issue to it, the plugin will try to resolve your issue. What this means is that it will look for available transitions from the current state and it will try to find one that in the name has the word "resolve". If such a transition is found it will apply it, otherwise it will just log a message. In future releases this will be configurable.
+
 ![](img/job-config1.png)
 
 Only after configuring the fields above, if you want you can override the **Summary** and **Description** values by clicking the **Advanced** button. 
