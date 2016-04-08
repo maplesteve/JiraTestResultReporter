@@ -64,3 +64,7 @@ Finally, your issues are created and you can see them by clicking the links dire
 For text fields in the Job Configuration and Global Confinguration (Summary and Description only) you can use variables that will expand to the appropriate value when the issue is created in JIRA. You can use all the environment variables defined by Jenkins (see [link](https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project)). Additionaly, this plugin can expand a set of predefined variables that expose information about the test.
 
 ![](img/variables.png)
+
+### Implementation details
+
+![](img/hashmaps.jpg)
