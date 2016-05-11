@@ -31,7 +31,7 @@ public class FullStatus extends Status {
      * @param statusCategory
      */
     public FullStatus(Status status, StatusCategory statusCategory) {
-        super(status.getSelf(), status.getName(), status.getDescription(), status.getIconUrl());
+        super(status.getSelf(), status.getId(), status.getName(), status.getDescription(), status.getIconUrl());
         this.statusCategory = statusCategory;
     }
 
