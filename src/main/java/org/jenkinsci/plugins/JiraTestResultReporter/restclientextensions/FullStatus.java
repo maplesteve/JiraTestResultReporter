@@ -42,4 +42,13 @@ public class FullStatus extends Status {
     public String getColorName() {
         return statusCategory.getColorName();
     }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof FullStatus) {
+            return super.equals(other);
+        }
+
+        return false;
+    }
 }

@@ -101,7 +101,7 @@ public class StringFields extends AbstractFields{
         public ListBoxModel doFillFieldKeyItems(@QueryParameter @RelativePath("..") String projectKey,
                                                 @QueryParameter @RelativePath("..") String issueType) {
             JiraTestDataPublisherDescriptor jiraDescriptor = JiraUtils.getJiraDescriptor();
-            if(projectKey == "" || issueType == "")
+            if(projectKey.equals("") || issueType.equals(""))
                 return new ListBoxModel();
             try {
                 return jiraDescriptor.getCacheEntry(projectKey, issueType).getStringFieldBox();

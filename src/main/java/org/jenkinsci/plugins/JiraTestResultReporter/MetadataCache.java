@@ -33,7 +33,7 @@ import java.util.Set;
  */
 public class MetadataCache {
     HashMap<String, HashMap<String, CacheEntry>> fieldConfigCache = new HashMap<String, HashMap<String, CacheEntry>>();
-    public class CacheEntry {
+    public static class CacheEntry {
         private Map<String, CimFieldInfo> fieldInfoMap;
         private ListBoxModel stringFieldBox;
         private ListBoxModel selectableFieldBox;

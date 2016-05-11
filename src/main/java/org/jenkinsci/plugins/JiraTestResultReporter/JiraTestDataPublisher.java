@@ -252,7 +252,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         private static final String DEFAULT_SUMMARY = "${TEST_FULL_NAME} : ${TEST_ERROR_DETAILS}";
         private static final String DEFAULT_DESCRIPTION = "${BUILD_URL}${CRLF}${TEST_STACK_TRACE}";
-        public static final List<AbstractFields> templates;
+        static final List<AbstractFields> templates;
         static{
             templates = new ArrayList<AbstractFields>();
             templates.add(new StringFields("summary", "${DEFAULT_SUMMARY}"));
@@ -281,7 +281,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @return
          */
         public String getDefaultSummary() {
-             return defaultSummary != null && defaultSummary != "" ? defaultSummary : DEFAULT_SUMMARY;
+             return defaultSummary != null && !defaultSummary.equals("") ? defaultSummary : DEFAULT_SUMMARY;
         }
 
         /**
@@ -289,7 +289,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @return
          */
         public String getDefaultDescription() {
-            return defaultDescription != null && defaultDescription != "" ? defaultDescription : DEFAULT_DESCRIPTION;
+            return defaultDescription != null && !defaultDescription.equals("") ? defaultDescription : DEFAULT_DESCRIPTION;
         }
 
         /**
@@ -473,7 +473,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          */
         public ListBoxModel doFillIssueTypeItems(@QueryParameter String projectKey) {
             ListBoxModel m = new ListBoxModel();
-            if(projectKey == "")
+            if(projectKey.equals(""))
                 return m;
 
             ProjectRestClient projectRestClient = getRestClient().getProjectClient();
