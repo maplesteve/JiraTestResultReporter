@@ -252,7 +252,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         private static final String DEFAULT_SUMMARY = "${TEST_FULL_NAME} : ${TEST_ERROR_DETAILS}";
         private static final String DEFAULT_DESCRIPTION = "${BUILD_URL}${CRLF}${TEST_STACK_TRACE}";
-        static final List<AbstractFields> templates;
+        public static final List<AbstractFields> templates;
         static{
             templates = new ArrayList<AbstractFields>();
             templates.add(new StringFields("summary", "${DEFAULT_SUMMARY}"));
