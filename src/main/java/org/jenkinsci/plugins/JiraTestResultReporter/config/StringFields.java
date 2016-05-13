@@ -32,10 +32,18 @@ import org.kohsuke.stapler.QueryParameter;
  * Created by tuicu.
  * Class for fields that accept single string values
  */
-public class StringFields extends AbstractFields{
+public class StringFields extends AbstractFields {
     public static final long serialVersionUID = 4298649925601364399L;
+    private static final ListBoxModel DEFAULT_MODEL;
+
     private String fieldKey;
     private String value;
+
+    static {
+        DEFAULT_MODEL = new ListBoxModel();
+        DEFAULT_MODEL.add(new ListBoxModel.Option("Summary", "summary", false));
+        DEFAULT_MODEL.add(new ListBoxModel.Option("Description", "description", false));
+    }
 
     /**
      * Constructor
@@ -101,13 +109,14 @@ public class StringFields extends AbstractFields{
         public ListBoxModel doFillFieldKeyItems(@QueryParameter @RelativePath("..") String projectKey,
                                                 @QueryParameter @RelativePath("..") String issueType) {
             JiraTestDataPublisherDescriptor jiraDescriptor = JiraUtils.getJiraDescriptor();
-            if(projectKey.equals("") || issueType.equals(""))
-                return new ListBoxModel();
+            if(projectKey.equals("") || issueType.equals("")) {
+                return DEFAULT_MODEL;
+            }
             try {
                 return jiraDescriptor.getCacheEntry(projectKey, issueType).getStringFieldBox();
             }
             catch (NullPointerException e) {
-                return new ListBoxModel();
+                return DEFAULT_MODEL;
             }
         }
     }
