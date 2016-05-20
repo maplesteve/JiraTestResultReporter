@@ -346,14 +346,22 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 		public boolean configure(StaplerRequest req, JSONObject json)
 				throws FormException {
 
+            if (json.getString("jiraUrl").equals("")
+                    || json.getString("username").equals("")
+                    || json.getString("password").equals("")) {
+                return false;
+            }
+
             try {
                 jiraUri  = new URI(json.getString("jiraUrl"));
             } catch (URISyntaxException e) {
                 JiraUtils.logError("Invalid server URI", e);
             }
 
+
             username = json.getString("username");
 			password = Secret.fromString(json.getString("password"));
+
             AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
             restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
             restClientExtension = new JiraRestClientExtension(jiraUri,
