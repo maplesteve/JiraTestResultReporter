@@ -25,7 +25,7 @@
         </j:when>
         <j:otherwise>
             <st:nbsp/><img src="${resURL}/plugin/JiraTestResultReporter/remove.png" onClick="doClear('${it}')"  height="16" width="16" style="cursor:pointer"/><st:nbsp/>
-            <a href="${it.issueUrl}" target="_blank">${it.issueKey}</a>
+            <a href="${it.issueUrl}" title="${it.issueSummary}" target="_blank">${it.issueKey}</a>
             <st:nbsp/><st:include page="issueStatus.jelly"/>
         </j:otherwise>
     </j:choose><st:nbsp/>

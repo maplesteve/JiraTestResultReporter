@@ -50,6 +50,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     private JiraTestData testData;
     private String issueStatus;
     private String statusColor;
+    private String issueSummary;
     private Job job; //the same as project if it's not a matrix build
     private AbstractProject project;
 
@@ -106,7 +107,9 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
         if (issueKey != null) {
             IssueRestClient issueRestClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
             try {
-                issueStatus = issueRestClient.getIssue(issueKey).claim().getStatus().getName();
+                Issue issue = issueRestClient.getIssue(issueKey).claim();
+                issueStatus = issue.getStatus().getName();
+                issueSummary = issue.getSummary();
                 JiraTestDataPublisher.JiraTestDataPublisherDescriptor jiraDescriptor = JiraUtils.getJiraDescriptor();
                 if (jiraDescriptor.getStatusesMap() != null) {
                     FullStatus status = jiraDescriptor.getStatusesMap().get(issueStatus);
@@ -149,6 +152,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     public String getIssueUrl() { return JiraUtils.getIssueURL(JiraUtils.getJiraDescriptor().getJiraUrl(), issueKey); }
 
+    public String getIssueSummary() { return issueSummary; }
     /**
      * Method for linking an issue to this test, called from badge.jelly
      * @param issueKey the key of the issue (ex. TST-256)
