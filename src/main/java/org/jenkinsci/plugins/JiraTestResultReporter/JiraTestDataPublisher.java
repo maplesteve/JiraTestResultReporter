@@ -388,7 +388,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             catch (RestClientException e) {
                 //status categories not available, either the server doesn't have the dark feature enabled, or
                 //this version of Jira cannot be queried for this info
-                JiraUtils.logWarning("Jira server does not support status categories");
+                JiraUtils.logWarning("Jira server does not support status categories", e);
             }
         }
 
@@ -469,6 +469,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 if (project == null)
                     return FormValidation.error("Invalid Project Key");
             } catch (RestClientException e) {
+                JiraUtils.logWarning("Invalid Project Key", e);
                 return FormValidation.error("Invalid Project Key");
             }
             return FormValidation.ok(project.getName());
@@ -547,6 +548,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 IssueInput newIssue = newIssueBuilder.build();
                 newCreatedIssue = issueClient.createIssue(newIssue).claim();
             } catch (RestClientException e) {
+                JiraUtils.logError("Error when creating issue", e);
                 return FormValidation.error(JiraUtils.getErrorMessage(e, "\n"));
             }
 
@@ -554,6 +556,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             try {
                 restClientExtension.deteleIssue(newCreatedIssue.getKey()).claim();
             } catch (RestClientException e) {
+                JiraUtils.logError("Error when deleting issue", e);
                 return FormValidation.warning(JiraUtils.getErrorMessage(e, "\n"));
             }
 

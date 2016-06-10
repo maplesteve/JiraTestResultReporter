@@ -243,6 +243,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
                 String issueKey = JiraUtils.createIssueInput(project, test, testData.getEnvVars());
                 return setIssueKey(issueKey);
             } catch (RestClientException e) {
+                JiraUtils.logError("Error when creating issue", e);
                 return FormValidation.error(JiraUtils.getErrorMessage(e, "\n"));
             }
         }
@@ -260,6 +261,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
             Promise<Issue> issuePromise = restClient.getIssue(issueKey);
             Issue issue = issuePromise.claim();
         }catch (RestClientException e) {
+            JiraUtils.logError("Error when validating issue", e);
             return false;
         }
         return true;

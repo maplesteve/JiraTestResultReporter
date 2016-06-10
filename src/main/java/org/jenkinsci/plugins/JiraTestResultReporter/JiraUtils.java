@@ -63,6 +63,8 @@ public class JiraUtils {
     public static void logWarning(String message) {
         LOGGER.log(Level.WARNING, message);
     }
+
+    public static void logWarning(String message, Exception e) { LOGGER.log(Level.WARNING, message, e);}
     /**
      * Static getter for the JiraTestDataPublisherDescriptor singleton instance
      * @return
