@@ -56,9 +56,7 @@ public class JiraTestData extends TestResultAction.Data {
     public List<? extends TestAction> getTestAction(TestObject testObject) {
         if (testObject instanceof CaseResult) {
             CaseResult test = (CaseResult) testObject;
-            if(test.isFailed()) {
-                return Collections.singletonList(new JiraTestAction(this, test));
-            }
+            return Collections.singletonList(new JiraTestAction(this, test));
         }
 
         return Collections.emptyList();

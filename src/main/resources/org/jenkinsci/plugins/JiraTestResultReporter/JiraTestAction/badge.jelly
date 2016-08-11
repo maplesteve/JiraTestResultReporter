@@ -11,7 +11,7 @@
     </script>
 
     <j:choose>
-        <j:when test="${ it.issueKey == null }">
+        <j:when test="${ it.issueKey == null and it.isTestFailing() == true }">
             <img src="${imagesURL}/16x16/document_add.png" onClick="hideshow(document.getElementById('jira-${it}'))" height="16" width="16" style="cursor:pointer"/> No issue
             <img src="${imagesURL}/spinner.gif" id="spinner-${it}" style="display:none"/>
             <div id="jira-${it}" style="display:none">
@@ -23,11 +23,11 @@
                 <div id="jiraErrors-${it}"/>
             </div>
         </j:when>
-        <j:otherwise>
+        <j:when test="${ it.issueKey != null }">
             <st:nbsp/><img src="${resURL}/plugin/JiraTestResultReporter/remove.png" onClick="doClear('${it}')"  height="16" width="16" style="cursor:pointer"/><st:nbsp/>
             <a href="${it.issueUrl}" title="${it.issueSummary}" target="_blank">${it.issueKey}</a>
             <st:nbsp/><st:include page="issueStatus.jelly"/>
-        </j:otherwise>
+        </j:when>
     </j:choose><st:nbsp/>
 
 

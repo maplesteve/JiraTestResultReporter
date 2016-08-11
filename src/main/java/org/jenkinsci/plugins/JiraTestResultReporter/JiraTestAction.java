@@ -152,7 +152,15 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     public String getIssueUrl() { return JiraUtils.getIssueURL(JiraUtils.getJiraDescriptor().getJiraUrl(), issueKey); }
 
+    /**
+     * Getter to find is the test is failing
+     */
+    public boolean isTestFailing() {
+        return test.isFailed();
+    }
+
     public String getIssueSummary() { return issueSummary; }
+
     /**
      * Method for linking an issue to this test, called from badge.jelly
      * @param issueKey the key of the issue (ex. TST-256)
