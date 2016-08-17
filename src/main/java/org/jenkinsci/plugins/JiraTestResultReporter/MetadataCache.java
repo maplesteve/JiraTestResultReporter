@@ -39,6 +39,7 @@ public class MetadataCache {
         private ListBoxModel selectableFieldBox;
         private ListBoxModel stringArrayFieldBox;
         private ListBoxModel selectableArrayFieldBox;
+        private ListBoxModel userFieldBox;
 
         /**
          * Constructor
@@ -50,6 +51,7 @@ public class MetadataCache {
             stringArrayFieldBox = new ListBoxModel();
             selectableFieldBox = new ListBoxModel();
             selectableArrayFieldBox = new ListBoxModel();
+            userFieldBox = new ListBoxModel();
 
             for(CimProject project : metadata) {
                 for(CimIssueType cimIssueType : project.getIssueTypes()) {
@@ -69,6 +71,9 @@ public class MetadataCache {
                         else if(entry.getValue().getSchema().getType().equals("array") && entry.getValue().getAllowedValues() != null) {
                             selectableArrayFieldBox.add(new ListBoxModel.Option(entry.getValue().getName(), entry.getKey(), false));
                         }
+                        else if(entry.getValue().getSchema().getType().equals("user")) {
+                            userFieldBox.add(new ListBoxModel.Option(entry.getValue().getName(), entry.getKey(), false));
+                        }
                     }
                     break; //the request is made for just one issue type
                 }
@@ -84,7 +89,17 @@ public class MetadataCache {
 
         public ListBoxModel getSelectableArrayFieldBox() { return selectableArrayFieldBox; }
 
+        public ListBoxModel getUserFieldBox() { return userFieldBox; }
+
         public Map<String, CimFieldInfo> getFieldInfoMap() { return fieldInfoMap; }
+
+        private void listInfo(Map.Entry<String, CimFieldInfo> entry) {
+            System.out.println(entry.getValue().getName() + " :: " + entry.getValue().getSchema().getType());
+            if(entry.getValue().getAllowedValues() != null) {
+                for(Object o : entry.getValue().getAllowedValues()) {
+                    System.out.println("\t" + o);
+                }}
+        }
     }
 
 
