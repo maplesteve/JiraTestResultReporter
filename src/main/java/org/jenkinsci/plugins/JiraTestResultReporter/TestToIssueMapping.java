@@ -16,6 +16,8 @@
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import hudson.matrix.MatrixProject;
@@ -35,8 +37,8 @@ import java.util.HashMap;
  */
 public class TestToIssueMapping {
     private static TestToIssueMapping instance = new TestToIssueMapping();
+    private static final Gson GSON = new Gson();
     private static final String MAP_FILE_NAME = "JiraIssueKeyToTestMap";
-
     /**
      * Getter for the singleton instance
      * @return
@@ -223,5 +225,36 @@ public class TestToIssueMapping {
             return jobsMap.get(job.getFullName()) != null ? jobsMap.get(job.getFullName()).get(testId) : null;
         }
         return jobMap.get(testId);
+    }
+
+    public JsonElement getMap(MatrixProject matrixProject, String subJobName) {
+        Job job = matrixProject.getItem(subJobName);
+        if (job == null)
+            return null;
+        return getMap(job);
+    }
+
+    public JsonElement getMap(MatrixProject matrixProject) {
+        JsonObject jsonObject = new JsonObject();
+        for(Job job : matrixProject.getAllJobs()) {
+            if(matrixProject == job)
+                continue;
+            jsonObject.add(job.getName(), getMap(job));
+        }
+        return jsonObject;
+    }
+
+    public JsonElement getMap(Job job) {
+        if(job instanceof MatrixProject) {
+            return getMap((MatrixProject)job);
+        } else {
+            HashMap<String, String> jobMap = jobsMap.get(job.getFullName());
+            if(jobMap == null) {
+                jobMap = new HashMap<>();
+            }
+            synchronized (jobMap) {
+                return GSON.toJsonTree(jobMap);
+            }
+        }
     }
 }
