@@ -4,7 +4,7 @@ JiraTestResultReporter
 **Hello! Thank you for your interest in contributing to this plugin! If you were looking for the previous versions, please checkout the 1.x branch**
 
 ### How to submit a bug report/feature request
-For submitting bug reports and feature requests please use the official ![JIRA](https://issues.jenkins-ci.org) for Jenkins and specify in the component field **jiratestresultreporter-plugin** .
+For submitting bug reports and feature requests please use the official [[JIRA|https://issues.jenkins-ci.org]] for Jenkins and specify in the component field **jiratestresultreporter-plugin** .
 
 In case of bug reports, please specify:
 * the plugin version
