@@ -24,6 +24,7 @@ Before you make a contribution, please make sure that there is a JIRA ticket for
 One pull request should solve one JIRA ticket. 
 
 For your convinience you should try to use the following workflow:
+
 **Setup workflow**
 * Fork on GitHub (click Fork button)
 * Clone to computer, use SSH URL ($ git clone git@github.com:${your_git_username}/JiraTestResultReporter-plugin.git)
