@@ -346,12 +346,6 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 		public boolean configure(StaplerRequest req, JSONObject json)
 				throws FormException {
 
-            if (json.getString("jiraUrl").equals("")
-                    || json.getString("username").equals("")
-                    || json.getString("password").equals("")) {
-                return false;
-            }
-
             try {
                 jiraUri  = new URI(json.getString("jiraUrl"));
             } catch (URISyntaxException e) {
@@ -361,13 +355,22 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
             username = json.getString("username");
 			password = Secret.fromString(json.getString("password"));
+            defaultSummary = json.getString("summary");
+            defaultDescription = json.getString("description");
+
+            if (json.getString("jiraUrl").equals("")
+                    || json.getString("username").equals("")
+                    || json.getString("password").equals("")) {
+                restClient = null;
+                restClientExtension = null;
+                save();
+                return true;
+            }
 
             AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
             restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
             restClientExtension = new JiraRestClientExtension(jiraUri,
                     new AsynchronousHttpClientFactory().createClient(jiraUri, new BasicHttpAuthenticationHandler(username, password.getPlainText())));
-            defaultSummary = json.getString("summary");
-            defaultDescription = json.getString("description");
             tryCreatingStatusToCategoryMap();
 			save();
             return super.configure(req, json);

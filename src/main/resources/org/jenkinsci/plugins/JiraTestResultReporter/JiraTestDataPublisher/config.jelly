@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
     <j:choose>
-        <j:when test="${ descriptor.jiraUri != null }">
+        <j:when test="${ descriptor.restClient != null }">
             <f:entry title="Project Key" field="projectKey">
                 <f:textbox/>
             </f:entry>
@@ -52,8 +52,8 @@
         <j:otherwise>
             <f:entry>
                 <div class="error">
-                    No jira site configured.<br/>
-                    Please do so from <a href="${rootURL}/configure" target="_new">the system configuration</a>.
+                    Incomplete JIRA connection configuration.<br/>
+                    Please check <a href="${rootURL}/configure" target="_new">the system configuration</a>.
                 </div>
             </f:entry>
         </j:otherwise>
