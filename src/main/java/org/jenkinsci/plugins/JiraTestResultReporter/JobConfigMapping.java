@@ -44,6 +44,7 @@ public class JobConfigMapping {
         private List<AbstractFields> configs;
         private boolean autoRaiseIssue;
         private boolean autoResolveIssue;
+        private boolean autoUnlinkIssue;
         private transient Pattern issueKeyPattern;
 
         /**
@@ -53,13 +54,14 @@ public class JobConfigMapping {
          * @param configs list with the configured fields
          */
         public JobConfigEntry(String projectKey, Long issueType, List<AbstractFields> configs,
-                              boolean autoRaiseIssue, boolean autoResolveIssue) {
+                              boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue) {
             this.projectKey = projectKey;
             this.issueType = issueType;
             this.configs = configs;
             this.issueKeyPattern = Pattern.compile(projectKey + "-\\d+");
             this.autoRaiseIssue = autoRaiseIssue;
             this.autoResolveIssue = autoResolveIssue;
+            this.autoUnlinkIssue = autoUnlinkIssue;
         }
 
         /**
@@ -89,6 +91,8 @@ public class JobConfigMapping {
         public boolean getAutoRaiseIssue() { return autoRaiseIssue; }
 
         public boolean getAutoResolveIssue() { return  autoResolveIssue; }
+
+        public boolean getAutoUnlinkIssue() { return autoUnlinkIssue; }
 
         /**
          * Getter for the issue key pattern
@@ -234,8 +238,9 @@ public class JobConfigMapping {
                                         Long issueType,
                                         List<AbstractFields> configs,
                                         boolean autoRaiseIssue,
-                                        boolean autoResolveIssue) {
-        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue);
+                                        boolean autoResolveIssue,
+                                        boolean autoUnlinkIssue) {
+        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue);
         configMap.put(project.getFullName(), entry);
         save(project, entry);
     }
@@ -288,6 +293,11 @@ public class JobConfigMapping {
     public boolean getAutoResolveIssue(AbstractProject project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoResolveIssue() : false;
+    }
+
+    public boolean getAutoUnlinkIssue(AbstractProject project) {
+        JobConfigEntry entry = getJobConfigEntry(project);
+        return entry != null ? entry.getAutoUnlinkIssue() : false;
     }
 
     /**

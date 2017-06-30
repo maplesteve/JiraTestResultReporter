@@ -110,7 +110,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      */
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
-                                 boolean autoRaiseIssue, boolean autoResolveIssue) {
+                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue) {
         AbstractProject project = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
         TestToIssueMapping.getInstance().register(project);
         long defaultIssueType;
@@ -121,7 +121,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             defaultIssueType = 1L;
         }
         JobConfigMapping.getInstance()
-                .saveConfig(project, projectKey, defaultIssueType, Util.fixNull(configs), autoRaiseIssue, autoResolveIssue);
+                .saveConfig(project, projectKey, defaultIssueType, Util.fixNull(configs), autoRaiseIssue, autoResolveIssue, autoUnlinkIssue);
 	}
 
     /**
@@ -157,8 +157,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         if(JobConfigMapping.getInstance().getAutoResolveIssue(project)) {
             resolveIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
+
+        if(JobConfigMapping.getInstance().getAutoUnlinkIssue(project)) {
+            unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
+        }
         return new JiraTestData(envVars);
 	}
+
+    private void unlinkIssuesForPassedTests(TaskListener listener, AbstractProject project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+        for(CaseResult test : testCaseResults) {
+            if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+                synchronized (test.getId()) {
+                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+                    TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
+                }
+            }
+        }
+    }
 
     private void resolveIssues(TaskListener listener, AbstractProject project, Job job,
                                EnvVars envVars, List<CaseResult> testCaseResults) {
