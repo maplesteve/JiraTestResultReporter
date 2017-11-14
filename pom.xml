@@ -13,6 +13,7 @@
   <properties>
     <jenkins.version>2.27</jenkins.version>
     <jira-rest-client.version>4.0.0</jira-rest-client.version>
+    <fugue.version>2.6.1</fugue.version>
     <findbugs.failOnError>false</findbugs.failOnError>
     <java.level>8</java.level>
   </properties>
@@ -138,11 +139,6 @@
     </dependency>
     <dependency>
       <groupId>com.atlassian.jira</groupId>
-      <artifactId>jira-rest-java-client-plugin</artifactId>
-      <version>3.0.0</version>
-    </dependency>
-    <dependency>
-      <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-core</artifactId>
       <version>${jira-rest-client.version}</version>
       <exclusions>
@@ -154,36 +150,44 @@
           <groupId>org.springframework</groupId>
           <artifactId>spring-beans</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>javax.activation</groupId>
+          <artifactId>activation</artifactId>
+        </exclusion>
       </exclusions>
     </dependency>
     <dependency>
       <groupId>com.atlassian.fugue</groupId>
       <artifactId>fugue</artifactId>
-      <version>2.2.1</version>
+      <version>${fugue.version}</version>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpmime</artifactId>
-      <version>4.5.2</version>
+      <version>4.5.3</version>
     </dependency>
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient</artifactId>
-      <version>4.5.2</version>
+      <version>4.5.3</version>
+      <exclusions>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
-    <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore</artifactId>
-      <version>4.4.4</version>
-    </dependency>
-
     <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>fluent-hc</artifactId>
-      <version>4.5.2</version>
+      <version>4.5.3</version>
     </dependency>
-
-
+    <dependency>
+      <groupId>org.apache.maven</groupId>
+      <artifactId>maven-artifact</artifactId>
+      <version>3.5.0</version>
+    </dependency>
     <dependency>
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
