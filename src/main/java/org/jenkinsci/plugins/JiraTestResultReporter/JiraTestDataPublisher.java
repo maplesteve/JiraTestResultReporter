@@ -94,6 +94,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return JobConfigMapping.getInstance().getAutoResolveIssue(getJobName());
     }
 
+    public boolean getAutoUnlinkIssue() {
+        return JobConfigMapping.getInstance().getAutoUnlinkIssue(getJobName());
+    }
+
     /**
      * Getter for the project associated with this publisher
      * @return
