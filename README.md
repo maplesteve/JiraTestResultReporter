@@ -61,6 +61,36 @@ Also from here you can configure the global templates for Summary and Descriptio
 ![](img/global-config.png)
 
 ### Job Configuration
+
+## Pipeline Style Jobs
+
+You can see below and example of a pipeline usage.
+
+The thing to keep in mind is that you need to use the field keys and the values as they are defined in the REST API. For example, for the 'issueType', the API expects the ID for the issue type, in this case '1', instead of 'Bug'.
+
+```java
+junit (
+ testResults: '**/surefire-reports/*.xml',
+ testDataPublishers: [
+   jiraTestResultReporter(
+     configs: [
+       jiraStringField(fieldKey: 'summary', value: '${DEFAULT_SUMMARY}'),
+       jiraStringField(fieldKey: 'description', value: '${DEFAULT_DESCRIPTION}'),
+       jiraStringArrayField(fieldKey: 'labels', values: [jiraArrayEntry(value: 'Jenkins'), jiraArrayEntry(value:'Integration')])
+     ],
+     projectKey: 'J2J',
+     issueType: '1',
+     autoRaiseIssue: false,
+     autoResolveIssue: false,
+     autoUnlinkIssue: false,
+   )
+ ]
+)
+```
+
+
+## Classic Jobs 
+
 The first thing we need to do here is enabling the plugin:
  * **Freestyle projects** and **Multi-configuration projects**
 
