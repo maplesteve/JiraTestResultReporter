@@ -34,6 +34,7 @@ import hudson.util.ListBoxModel;
 import hudson.util.Secret;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.StringFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
@@ -106,6 +107,17 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
     }
 
+    private boolean pipelineInvocation = false;
+    private JobConfigMapping.JobConfigEntry jobConfig;
+
+    private boolean isPipelineInvocation() {
+        return pipelineInvocation;
+    }
+
+    private JobConfigMapping.JobConfigEntry getJobConfig() {
+        return jobConfig;
+    }
+
     /**
      * Constructor
      * @param configs a list with the configured fields
@@ -115,18 +127,34 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
                                  boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue) {
-        AbstractProject project = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
-        TestToIssueMapping.getInstance().register(project);
+
         long defaultIssueType;
         try {
             defaultIssueType = Long.parseLong(issueType);
-        }
-        catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
             defaultIssueType = 1L;
         }
-        JobConfigMapping.getInstance()
-                .saveConfig(project, projectKey, defaultIssueType, Util.fixNull(configs), autoRaiseIssue, autoResolveIssue, autoUnlinkIssue);
-	}
+
+        this.jobConfig = new JobConfigMapping.JobConfigEntryBuilder()
+                .withProjectKey(projectKey)
+                .withIssueType(defaultIssueType)
+                .withAutoRaiseIssues(autoRaiseIssue)
+                .withAutoResolveIssues(autoResolveIssue)
+                .withAutoUnlinkIssues(autoUnlinkIssue)
+                .withConfigs(Util.fixNull(configs))
+                .build();
+
+        if (Stapler.getCurrentRequest() != null) {
+            //classic job - e.g. Freestyle project, Matrix project, etc.
+            AbstractProject project = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+            TestToIssueMapping.getInstance().register(project);
+            JobConfigMapping.getInstance()
+                    .saveConfig(project, getJobConfig());
+        } else {
+            //pipeline invocation
+            pipelineInvocation = true;
+        }
+    }
 
     /**
      * Method invoked for contributing data to this run, see Jenkins documentation for details about arguments
@@ -146,12 +174,17 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         EnvVars envVars = run.getEnvironment(listener);
 
         Job job = run.getParent();
-        AbstractProject project;
+        Job project;
         if (job instanceof MatrixConfiguration) {
             project = ((MatrixConfiguration)job).getParent();
         }
         else {
-            project = (AbstractProject)job;
+            project = job;
+        }
+
+        if(isPipelineInvocation()) {
+            TestToIssueMapping.getInstance().register(project);
+            JobConfigMapping.getInstance().saveConfig(project, getJobConfig());
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
@@ -168,7 +201,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return new JiraTestData(envVars);
 	}
 
-    private void unlinkIssuesForPassedTests(TaskListener listener, AbstractProject project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+    private void unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
         for(CaseResult test : testCaseResults) {
             if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 synchronized (test.getId()) {
@@ -179,7 +212,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
     }
 
-    private void resolveIssues(TaskListener listener, AbstractProject project, Job job,
+    private void resolveIssues(TaskListener listener, Job project, Job job,
                                EnvVars envVars, List<CaseResult> testCaseResults) {
 
         for(CaseResult test : testCaseResults) {
@@ -207,7 +240,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
     }
 
-    private void raiseIssues(TaskListener listener, AbstractProject project, Job job,
+    private void raiseIssues(TaskListener listener, Job project, Job job,
                              EnvVars envVars,List<CaseResult> testCaseResults) {
         for(CaseResult test : testCaseResults) {
             if(test.isFailed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null) {
@@ -259,6 +292,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return getDescriptor().getJiraUrl();
     }
 
+    @Symbol("jiraTestResultReporter")
 	@Extension
 	public static class JiraTestDataPublisherDescriptor extends Descriptor<TestDataPublisher> {
         /**
@@ -269,13 +303,20 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             load();
         }
 
+        public static final String SUMMARY_FIELD_NAME = "summary";
+        public static final String DESCRIPTION_FIELD_NAME = "description";
+
         private static final String DEFAULT_SUMMARY = "${TEST_FULL_NAME} : ${TEST_ERROR_DETAILS}";
         private static final String DEFAULT_DESCRIPTION = "${BUILD_URL}${CRLF}${TEST_STACK_TRACE}";
         public static final List<AbstractFields> templates;
+        public static final StringFields DEFAULT_SUMMARY_FIELD;
+        public static final StringFields DEFAULT_DESCRIPTION_FIELD;
         static{
             templates = new ArrayList<AbstractFields>();
-            templates.add(new StringFields("summary", "${DEFAULT_SUMMARY}"));
-            templates.add(new StringFields("description", "${DEFAULT_DESCRIPTION}"));
+            DEFAULT_SUMMARY_FIELD = new StringFields(SUMMARY_FIELD_NAME, "${DEFAULT_SUMMARY}");
+            DEFAULT_DESCRIPTION_FIELD = new StringFields(DESCRIPTION_FIELD_NAME, "${DEFAULT_DESCRIPTION}");
+            templates.add(DEFAULT_SUMMARY_FIELD);
+            templates.add(DEFAULT_DESCRIPTION_FIELD);
         }
 
         private transient HashMap<String, FullStatus> statuses;

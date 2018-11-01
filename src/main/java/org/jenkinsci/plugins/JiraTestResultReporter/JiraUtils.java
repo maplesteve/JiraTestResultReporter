@@ -23,7 +23,7 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
 import com.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
@@ -97,7 +97,7 @@ public class JiraUtils {
         return errorMessages.toString();
     }
 
-    public static String createIssueInput(AbstractProject project, TestResult test, EnvVars envVars) {
+    public static String createIssueInput(Job project, TestResult test, EnvVars envVars) {
         final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),

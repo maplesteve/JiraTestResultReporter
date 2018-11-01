@@ -32,6 +32,7 @@ import hudson.tasks.junit.TestAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import org.apache.tools.ant.taskdefs.condition.And;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
 import org.kohsuke.stapler.Ancestor;
@@ -52,7 +53,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     private String statusColor;
     private String issueSummary;
     private Job job; //the same as project if it's not a matrix build
-    private AbstractProject project;
+    private Job project;
 
     /**
      * Getter for issue status, called from issueStatus.jelly
@@ -125,7 +126,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      * Method for initializing the project. Used in constructor only.
      * @return
      */
-    private AbstractProject initProject() {
+    private Job initProject() {
         if(Stapler.getCurrentRequest() == null)
             return null;
 
@@ -135,7 +136,14 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
                 return (AbstractProject) ancestor.getObject();
             }
         }
-        return null;
+
+        Job lastAncestor = null;
+        for (Ancestor ancestor : ancestors) {
+            if(ancestor.getObject() instanceof Job) {
+                lastAncestor = (Job) ancestor.getObject();
+            }
+        }
+        return lastAncestor;
     }
 
     /**

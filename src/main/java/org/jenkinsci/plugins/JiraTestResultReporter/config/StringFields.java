@@ -22,6 +22,7 @@ import hudson.RelativePath;
 import hudson.model.Descriptor;
 import hudson.tasks.test.TestResult;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.JiraTestResultReporter.JiraTestDataPublisher.JiraTestDataPublisherDescriptor;
 import org.jenkinsci.plugins.JiraTestResultReporter.JiraUtils;
 import org.jenkinsci.plugins.JiraTestResultReporter.VariableExpander;
@@ -92,6 +93,7 @@ public class StringFields extends AbstractFields {
     /**
      * Descriptor, required for the hetero-list
      */
+    @Symbol("jiraStringField")
     @Extension
     public static class StringFieldsDescriptor extends Descriptor<AbstractFields> {
 

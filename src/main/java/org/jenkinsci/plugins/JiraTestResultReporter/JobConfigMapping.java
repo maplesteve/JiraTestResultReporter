@@ -19,15 +19,19 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import hudson.model.AbstractProject;
+import hudson.model.Job;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.FieldConfigsJsonAdapter;
+import org.jenkinsci.plugins.JiraTestResultReporter.config.StringFields;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import static org.jenkinsci.plugins.JiraTestResultReporter.JiraTestDataPublisher.JiraTestDataPublisherDescriptor.*;
 
 /**
  * Created by tuicu.
@@ -37,15 +41,15 @@ import java.util.regex.Pattern;
  * a new configuration is added
  */
 public class JobConfigMapping {
-    private static class JobConfigEntry implements Serializable {
+    public static class JobConfigEntry implements Serializable {
         public static final long serialVersionUID = 6509568994710878311L; //backwards compatibility
-        private String projectKey;
-        private Long issueType;
-        private List<AbstractFields> configs;
-        private boolean autoRaiseIssue;
-        private boolean autoResolveIssue;
-        private boolean autoUnlinkIssue;
-        private transient Pattern issueKeyPattern;
+        protected String projectKey;
+        protected Long issueType;
+        protected List<AbstractFields> configs;
+        protected boolean autoRaiseIssue;
+        protected boolean autoResolveIssue;
+        protected boolean autoUnlinkIssue;
+        protected transient Pattern issueKeyPattern;
 
         /**
          * Constructor
@@ -58,10 +62,10 @@ public class JobConfigMapping {
             this.projectKey = projectKey;
             this.issueType = issueType;
             this.configs = configs;
-            this.issueKeyPattern = Pattern.compile(projectKey + "-\\d+");
             this.autoRaiseIssue = autoRaiseIssue;
             this.autoResolveIssue = autoResolveIssue;
             this.autoUnlinkIssue = autoUnlinkIssue;
+            compileIssueKeyPattern();
         }
 
         /**
@@ -106,10 +110,87 @@ public class JobConfigMapping {
          * @return this object
          */
         private Object readResolve() {
-            this.issueKeyPattern = Pattern.compile(projectKey + "-\\d+");
+            compileIssueKeyPattern();
+            return this;
+        }
+
+        protected void compileIssueKeyPattern() {
+            this.issueKeyPattern = projectKey !=  null ? Pattern.compile(projectKey + "-\\d+") : null;
+        }
+    }
+
+    /**
+     * Builder fot a JobConfigEntry
+     */
+    public static class JobConfigEntryBuilder extends JobConfigEntry {
+        /**
+         * Constructor
+         */
+        public JobConfigEntryBuilder() {
+            super(null, null, new ArrayList<>(), false, false, false);
+        }
+
+        public JobConfigEntryBuilder withProjectKey(String projectKey) {
+            this.projectKey = projectKey;
+            compileIssueKeyPattern();
+            return this;
+        }
+
+        public JobConfigEntryBuilder withIssueType(Long issueType) {
+            this.issueType = issueType;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withConfigs(List<AbstractFields> configs) {
+            this.configs = configs;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withAutoRaiseIssues(boolean autoRaiseIssues) {
+            this.autoRaiseIssue = autoRaiseIssues;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withAutoResolveIssues(boolean autoResolveIssue) {
+            this.autoResolveIssue = autoResolveIssue;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withAutoUnlinkIssues(boolean autoUnlinkIssues) {
+            this.autoUnlinkIssue = autoUnlinkIssues;
+            return this;
+        }
+
+        public JobConfigEntry build() {
+            if(projectKey == null) { throw new IllegalStateException("The Project Key may not be null"); }
+            if(issueType == null) { throw new IllegalStateException("The Issue Type may not be null"); }
+            StringFields summary = null;
+            StringFields description = null;
+
+            for(AbstractFields field : this.getConfigs()) {
+                if(field instanceof StringFields) {
+                    StringFields stringField = (StringFields) field;
+                    if(stringField.getFieldKey().equals(SUMMARY_FIELD_NAME)) {
+                        summary = stringField;
+                    }
+                    if(stringField.getFieldKey().equals(DESCRIPTION_FIELD_NAME)) {
+                        description = stringField;
+                    }
+                }
+            }
+
+            if(summary == null) {
+                this.getConfigs().add(DEFAULT_SUMMARY_FIELD);
+            }
+
+            if(description == null) {
+                this.getConfigs().add(DEFAULT_DESCRIPTION_FIELD);
+            }
+
             return this;
         }
     }
+
     private static JobConfigMapping instance = new JobConfigMapping();
     private static final String CONFIGS_FILE = "JiraIssueJobConfigs";
 
@@ -128,7 +209,7 @@ public class JobConfigMapping {
     private JobConfigMapping(){
         configMap = new HashMap<String, JobConfigEntry>();
 
-        for(AbstractProject project : Jenkins.getInstance().getItems(AbstractProject.class)) {
+        for(Job project : Jenkins.getInstance().getItems(Job.class)) {
             JobConfigEntry entry = load(project);
             if (entry != null) {
                 configMap.put(project.getFullName(), entry);
@@ -141,11 +222,11 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    private String getPathToFile(AbstractProject project) {
+    private String getPathToFile(Job project) {
         return project.getRootDir().toPath().resolve(CONFIGS_FILE).toString();
     }
 
-    private String getPathToJsonFile(AbstractProject project) {
+    private String getPathToJsonFile(Job project) {
         return project.getRootDir().toPath().resolve(CONFIGS_FILE).toString() + ".json";
     }
 
@@ -155,7 +236,7 @@ public class JobConfigMapping {
      * @param project
      * @return the loaded JobConfigEntry, or null if there was no file, or it could not be loaded
      */
-    private JobConfigEntry loadBackwardsCompatible(AbstractProject project) {
+    private JobConfigEntry loadBackwardsCompatible(Job project) {
         try {
             FileInputStream fileIn = new FileInputStream(getPathToFile(project));
             ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -181,7 +262,7 @@ public class JobConfigMapping {
      * @param project
      * @return the loaded JobConfigEntry, or null if there was no file, or it could not be loaded
      */
-    private JobConfigEntry load(AbstractProject project) {
+    private JobConfigEntry load(Job project) {
         JobConfigEntry entry = null;
         try{
             Gson gson = new GsonBuilder()
@@ -209,7 +290,7 @@ public class JobConfigMapping {
     /**
      * Method for saving the map, called every time the map changes
      */
-    private void save(AbstractProject project, JobConfigEntry entry) {
+    private void save(Job project, JobConfigEntry entry) {
         try {
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(AbstractFields.class, new FieldConfigsJsonAdapter())
@@ -233,7 +314,7 @@ public class JobConfigMapping {
      * @param issueType
      * @param configs
      */
-    public synchronized void saveConfig(AbstractProject project,
+    public synchronized void saveConfig(Job project,
                                         String projectKey,
                                         Long issueType,
                                         List<AbstractFields> configs,
@@ -241,11 +322,21 @@ public class JobConfigMapping {
                                         boolean autoResolveIssue,
                                         boolean autoUnlinkIssue) {
         JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue);
+        saveConfig(project, entry);
+    }
+
+    /**
+     * Method for setting the last configuration made for a project
+     */
+    public synchronized void saveConfig(Job project, JobConfigEntry entry) {
+        if(entry instanceof JobConfigEntryBuilder) {
+            entry = ((JobConfigEntryBuilder) entry).build();
+        }
         configMap.put(project.getFullName(), entry);
         save(project, entry);
     }
 
-    private JobConfigEntry getJobConfigEntry(AbstractProject project) {
+    private JobConfigEntry getJobConfigEntry(Job project) {
         if(!configMap.containsKey(project.getFullName())) {
             JobConfigEntry entry = load(project);
             if(entry != null) {
@@ -260,7 +351,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public List<AbstractFields> getConfig(AbstractProject project) {
+    public List<AbstractFields> getConfig(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getConfigs() : null;
     }
@@ -270,7 +361,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public Long getIssueType(AbstractProject project) {
+    public Long getIssueType(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getIssueType() : null;
     }
@@ -280,22 +371,22 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public String getProjectKey(AbstractProject project) {
+    public String getProjectKey(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getProjectKey() : null;
     }
 
-    public boolean getAutoRaiseIssue(AbstractProject project) {
+    public boolean getAutoRaiseIssue(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoRaiseIssue() : false;
     }
 
-    public boolean getAutoResolveIssue(AbstractProject project) {
+    public boolean getAutoResolveIssue(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoResolveIssue() : false;
     }
 
-    public boolean getAutoUnlinkIssue(AbstractProject project) {
+    public boolean getAutoUnlinkIssue(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoUnlinkIssue() : false;
     }
@@ -305,7 +396,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public Pattern getIssueKeyPattern(AbstractProject project) {
+    public Pattern getIssueKeyPattern(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getIssueKeyPattern() : null;
     }

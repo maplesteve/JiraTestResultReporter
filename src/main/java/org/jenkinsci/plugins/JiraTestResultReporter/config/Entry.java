@@ -15,6 +15,11 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import hudson.Extension;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.Describable;
+import hudson.model.Descriptor;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.export.Exported;
 
@@ -24,7 +29,7 @@ import java.io.Serializable;
  * Created by tuicu.
  * Needed a class that has a annotated constructor with DataBoundConstructor and a string parameter
  */
-public class Entry implements Serializable {
+public class Entry extends AbstractDescribableImpl<Entry> implements Serializable {
     public static final long serialVersionUID = -2123529202949140774L;
     private String value;
 
@@ -41,5 +46,10 @@ public class Entry implements Serializable {
     @Override
     public String toString() {
         return value;
+    }
+
+    @Symbol("jiraArrayEntry")
+    @Extension
+    public static class EntryDescriptor extends Descriptor<Entry> {
     }
 }

@@ -26,6 +26,7 @@ import hudson.RelativePath;
 import hudson.model.Descriptor;
 import hudson.tasks.test.TestResult;
 import hudson.util.ListBoxModel;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.plugins.JiraTestResultReporter.JiraTestDataPublisher;
 import org.jenkinsci.plugins.JiraTestResultReporter.JiraUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -103,6 +104,7 @@ public class SelectableArrayFields extends AbstractFields {
     /**
      * Descriptor, required for the hetero-list
      */
+    @Symbol("jiraSelectableArrayField")
     @Extension
     public static class SelectableArrayFieldsDescriptor extends Descriptor<AbstractFields> {
 
