@@ -18,7 +18,7 @@ package org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions;
 import com.atlassian.httpclient.api.HttpClient;
 import com.atlassian.jira.rest.client.internal.async.AbstractAsynchronousRestClient;
 import com.atlassian.jira.rest.client.internal.json.GenericJsonArrayParser;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;

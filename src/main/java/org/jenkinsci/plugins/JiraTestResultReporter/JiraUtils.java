@@ -21,7 +21,7 @@ import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.model.Job;
 import hudson.tasks.test.TestResult;
