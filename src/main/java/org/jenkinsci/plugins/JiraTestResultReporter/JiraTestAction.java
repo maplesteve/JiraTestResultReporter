@@ -21,7 +21,7 @@ import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-import com.atlassian.util.concurrent.Promise;
+import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.ExtensionPoint;
