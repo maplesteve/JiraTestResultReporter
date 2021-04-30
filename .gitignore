@@ -5,3 +5,7 @@ myCredentials.txt
 JiraTestResultReporter.iml
 .idea/*
 work/*
+.factorypath
+.classpath
+.project
+.settings/
