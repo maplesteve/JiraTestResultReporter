@@ -18,17 +18,22 @@ package org.jenkinsci.plugins.JiraTestResultReporter;
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
+import hudson.model.AbstractProject;
 import hudson.model.Job;
 import hudson.tasks.test.TestResult;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -96,9 +101,8 @@ public class JiraUtils {
         }
         return errorMessages.toString();
     }
-
-    public static String createIssueInput(Job project, TestResult test, EnvVars envVars) {
-        final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
+    
+    public static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
                 JobConfigMapping.getInstance().getIssueType(project));
@@ -109,9 +113,80 @@ public class JiraUtils {
         for (AbstractFields f : JobConfigMapping.getInstance().getConfig(project)) {
             newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
         }
-        IssueInput issueInput = newIssueBuilder.build();
+        return newIssueBuilder.build();
+    }
+    
+    public static String createIssueInput(IssueInput issueInput) {
+        final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         Promise<BasicIssue> issuePromise = issueClient.createIssue(issueInput);
         return issuePromise.claim().getKey();
     }
+    
+    /**
+     * To prevent the creation of duplicates lets see if we can find a pre-existing issue.
+     * It is a duplicate if it has the same summary and is open in the project.
+     * @param project the project
+     * @param test the test
+     * @param envVars the environment variables
+     * @return a SearchResult. Empty SearchResult means nothing was found.
+     */
+    public static SearchResult findIssues(Job project, TestResult test, EnvVars envVars, IssueInput issueInput) {
+        SearchResult searchResult = null;
+        String projectKey = JobConfigMapping.getInstance().getProjectKey(project);
+        FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
+        String jql = String.format("status != \"closed\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
 
+        final Set<String > fields = new HashSet<>();
+        fields.add("summary");
+        fields.add("issuetype");
+        fields.add("created");
+        fields.add("updated");
+        fields.add("project");
+        fields.add("status");
+
+        log(jql);
+
+        try {
+            Promise<SearchResult> searchJqlPromise = JiraUtils.getJiraDescriptor().getRestClient().getSearchClient().searchJql(jql, 50, 0, fields);
+            searchResult = searchJqlPromise.claim();
+        } catch (RestClientException rce) {
+            rce.printStackTrace();
+        }
+        return searchResult;
+    }
+
+    /**
+     * Escape the JQL query of special characters.
+     *
+     * Currently:
+     *  + - & | ! ( ) { } [ ] ^ ~ * ? \ / :
+     *
+     * Reference:
+     *  https://confluence.atlassian.com/jiracoreserver073/search-syntax-for-text-fields-861257223.html
+     *
+     * @param jql the JQL query.
+     * @return the JQL query with special chars escaped.
+     */
+    static String escapeJQL(String jql) {
+        return jql.replaceAll("'","\\'")
+                .replaceAll("\"","\\\"")
+                .replaceAll("\\+", "\\\\+")
+                .replaceAll("-", "\\\\-")
+                .replaceAll("&", "\\\\&")
+                .replaceAll("\\|", "\\\\|")
+                .replaceAll("!", "\\\\!")
+                .replaceAll("\\(", "\\\\(")
+                .replaceAll("\\)", "\\\\)")
+                .replaceAll("\\{", "\\\\{")
+                .replaceAll("}", "\\\\}")
+                .replaceAll("\\[", "\\\\[")
+                .replaceAll("]", "\\\\]")
+                .replaceAll("\\^", "\\\\^")
+                .replaceAll("~", "\\\\~")
+                .replaceAll("\\*", "\\\\*")
+                .replaceAll("\\?", "\\\\\\?")
+                .replaceAll("\\\\","\\\\\\\\")
+                .replaceAll("\\/", "\\\\/")
+                .replaceAll(":", "\\\\\\\\:");
+    }
 }

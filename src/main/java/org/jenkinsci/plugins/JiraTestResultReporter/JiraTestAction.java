@@ -19,8 +19,11 @@ import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
+import com.google.common.collect.Iterables;
+
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -256,7 +259,14 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
             }
 
             try {
-                String issueKey = JiraUtils.createIssueInput(project, test, testData.getEnvVars());
+                EnvVars envVars = testData.getEnvVars();
+                IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
+                SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
+                if (searchResult != null && Iterables.size(searchResult.getIssues()) != 0) {
+                    JiraUtils.log("Ignoring creating issue as it would be a duplicate. (from Jira server)");
+                    return null;
+                }
+                String issueKey = JiraUtils.createIssueInput(issueInput);
                 return setIssueKey(issueKey);
             } catch (RestClientException e) {
                 JiraUtils.logError("Error when creating issue", e);
