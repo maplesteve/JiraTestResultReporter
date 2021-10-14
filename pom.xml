@@ -12,7 +12,7 @@
 
   <properties>
     <revision>2.0.10</revision>
-    <changelist>SNAPSHOT</changelist>
+    <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.138.4</jenkins.version>
     <jira-rest-client.version>5.2.1</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
@@ -22,7 +22,7 @@
 
   <groupId>org.jenkins-ci.plugins</groupId>
   <artifactId>JiraTestResultReporter</artifactId>
-  <version>${revision}-${changelist}</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins JiraTestResultReporter plugin</name>
   <description>Creates issues in Jira for failed tests and/or link them directly in Jenkins.</description>

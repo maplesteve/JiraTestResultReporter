@@ -20,9 +20,9 @@ import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
+import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-import com.google.common.collect.Iterables;
 
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
@@ -35,6 +35,8 @@ import hudson.tasks.junit.TestAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.tools.ant.taskdefs.condition.And;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
@@ -253,25 +255,12 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @JavaScriptMethod
     public FormValidation createIssue() {
-        synchronized (test.getId()) { //avoid creating duplicated issues
-            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                return null;
-            }
-
-            try {
-                EnvVars envVars = testData.getEnvVars();
-                IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
-                SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
-                if (searchResult != null && Iterables.size(searchResult.getIssues()) != 0) {
-                    JiraUtils.log("Ignoring creating issue as it would be a duplicate. (from Jira server)");
-                    return null;
-                }
-                String issueKey = JiraUtils.createIssueInput(issueInput);
-                return setIssueKey(issueKey);
-            } catch (RestClientException e) {
-                JiraUtils.logError("Error when creating issue", e);
-                return FormValidation.error(JiraUtils.getErrorMessage(e, "\n"));
-            }
+        try {
+            String id = JiraUtils.createIssue(job, project, testData.getEnvVars(), test);
+            return StringUtils.isBlank(id) ? FormValidation.error("Duplicate already exists") : setIssueKey(id);  
+        } catch (RestClientException e) {
+            JiraUtils.logError("Error when creating issue", e);
+            return FormValidation.error(JiraUtils.getErrorMessage(e, "\n"));
         }
     }
 

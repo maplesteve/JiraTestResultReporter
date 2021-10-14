@@ -24,7 +24,6 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
-import com.google.common.collect.Iterables;
 
 import io.atlassian.util.concurrent.Promise;
 import hudson.*;
@@ -246,25 +245,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                              EnvVars envVars,List<CaseResult> testCaseResults) {
         for(CaseResult test : testCaseResults) {
             if(test.isFailed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null) {
-                synchronized (test.getId()) { //avoid creating duplicated issues
-                    if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                        listener.getLogger().println("Ignoring creating issue as it would be a duplicate. (from local cache)");
-                        continue;
-                    }
-                    try {
-                        IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
-                        SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
-                        if (searchResult != null && Iterables.size(searchResult.getIssues()) != 0) {
-                            listener.getLogger().println("Ignoring creating issue as it would be a duplicate. (from Jira server)");
-                            continue;
-                        }
-                        String issueKey = JiraUtils.createIssueInput(issueInput);
-                        TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
-                        listener.getLogger().println("Created issue " + issueKey + " for test " + test.getFullDisplayName());
-                    } catch (RestClientException e) {
-                        listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
-                        e.printStackTrace(listener.getLogger());
-                    }
+                try {
+                    JiraUtils.createIssue(project, envVars, test);
+                } catch (RestClientException e) {
+                    listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
+                    e.printStackTrace(listener.getLogger());
                 }
             }
         }

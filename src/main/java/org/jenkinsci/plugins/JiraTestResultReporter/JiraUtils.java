@@ -27,7 +27,9 @@ import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.model.AbstractProject;
 import hudson.model.Job;
+import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.TestResult;
+import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 
@@ -102,7 +104,29 @@ public class JiraUtils {
         return errorMessages.toString();
     }
     
-    public static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars) {
+    public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
+        return createIssue(job, job, envVars, test);
+    }
+    
+    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test) throws RestClientException {
+        synchronized (test.getId()) { //avoid creating duplicated issues
+            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+                return null;
+            }
+
+            IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
+            SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
+            if (searchResult != null && searchResult.getTotal() > 0) {
+                FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
+                String id = issueInput.getField(fi.getId()).getValue().toString();
+                JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", id));
+                return null;
+            }
+            return JiraUtils.createIssueInput(issueInput);
+        }
+    }
+    
+    private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
                 JobConfigMapping.getInstance().getIssueType(project));
@@ -116,7 +140,7 @@ public class JiraUtils {
         return newIssueBuilder.build();
     }
     
-    public static String createIssueInput(IssueInput issueInput) {
+    private static String createIssueInput(IssueInput issueInput) {
         final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         Promise<BasicIssue> issuePromise = issueClient.createIssue(issueInput);
         return issuePromise.claim().getKey();
@@ -130,8 +154,7 @@ public class JiraUtils {
      * @param envVars the environment variables
      * @return a SearchResult. Empty SearchResult means nothing was found.
      */
-    public static SearchResult findIssues(Job project, TestResult test, EnvVars envVars, IssueInput issueInput) {
-        SearchResult searchResult = null;
+    public static SearchResult findIssues(Job project, TestResult test, EnvVars envVars, IssueInput issueInput) throws RestClientException {
         String projectKey = JobConfigMapping.getInstance().getProjectKey(project);
         FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
         String jql = String.format("status != \"closed\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
@@ -146,13 +169,8 @@ public class JiraUtils {
 
         log(jql);
 
-        try {
-            Promise<SearchResult> searchJqlPromise = JiraUtils.getJiraDescriptor().getRestClient().getSearchClient().searchJql(jql, 50, 0, fields);
-            searchResult = searchJqlPromise.claim();
-        } catch (RestClientException rce) {
-            rce.printStackTrace();
-        }
-        return searchResult;
+        Promise<SearchResult> searchJqlPromise = JiraUtils.getJiraDescriptor().getRestClient().getSearchClient().searchJql(jql, 50, 0, fields);
+        return searchJqlPromise.claim();
     }
 
     /**
@@ -168,25 +186,25 @@ public class JiraUtils {
      * @return the JQL query with special chars escaped.
      */
     static String escapeJQL(String jql) {
-        return jql.replaceAll("'","\\'")
-                .replaceAll("\"","\\\"")
-                .replaceAll("\\+", "\\\\+")
-                .replaceAll("-", "\\\\-")
-                .replaceAll("&", "\\\\&")
-                .replaceAll("\\|", "\\\\|")
-                .replaceAll("!", "\\\\!")
-                .replaceAll("\\(", "\\\\(")
-                .replaceAll("\\)", "\\\\)")
-                .replaceAll("\\{", "\\\\{")
-                .replaceAll("}", "\\\\}")
-                .replaceAll("\\[", "\\\\[")
-                .replaceAll("]", "\\\\]")
-                .replaceAll("\\^", "\\\\^")
-                .replaceAll("~", "\\\\~")
-                .replaceAll("\\*", "\\\\*")
-                .replaceAll("\\?", "\\\\\\?")
-                .replaceAll("\\\\","\\\\\\\\")
-                .replaceAll("\\/", "\\\\/")
-                .replaceAll(":", "\\\\\\\\:");
+        return jql.replace("'","\\'")
+                .replace("\"","\\\"")
+                .replace("\\+", "\\\\+")
+                .replace("-", "\\\\-")
+                .replace("&", "\\\\&")
+                .replace("\\|", "\\\\|")
+                .replace("!", "\\\\!")
+                .replace("\\(", "\\\\(")
+                .replace("\\)", "\\\\)")
+                .replace("\\{", "\\\\{")
+                .replace("}", "\\\\}")
+                .replace("\\[", "\\\\[")
+                .replace("]", "\\\\]")
+                .replace("\\^", "\\\\^")
+                .replace("~", "\\\\~")
+                .replace("\\*", "\\\\*")
+                .replace("\\?", "\\\\\\?")
+                .replace("\\\\","\\\\\\\\")
+                .replace("\\/", "\\\\/")
+                .replace(":", "\\\\\\\\:");
     }
 }
