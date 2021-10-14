@@ -23,7 +23,6 @@ import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
-
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -251,7 +250,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
 
     /**
      * Method for creating an issue in jira, called from badge.jelly
-     * @return  null if everything was Ok, an object with the error message if not
+     * @return a {@link FormValidation} with the result of the creation operation
      */
     @JavaScriptMethod
     public FormValidation createIssue() {
