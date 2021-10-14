@@ -157,7 +157,7 @@ public class JiraUtils {
     public static SearchResult findIssues(Job project, TestResult test, EnvVars envVars, IssueInput issueInput) throws RestClientException {
         String projectKey = JobConfigMapping.getInstance().getProjectKey(project);
         FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
-        String jql = String.format("status != \"closed\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
+        String jql = String.format("resolution = \"unresolved\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
 
         final Set<String > fields = new HashSet<>();
         fields.add("summary");
