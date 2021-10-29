@@ -244,18 +244,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                              EnvVars envVars,List<CaseResult> testCaseResults) {
         for(CaseResult test : testCaseResults) {
             if(test.isFailed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null) {
-                synchronized (test.getId()) { //avoid creating duplicated issues
-                    if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                        continue;
-                    }
-                    try {
-                        String issueKey = JiraUtils.createIssueInput(project, test, envVars);
-                        TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
-                        listener.getLogger().println("Created issue " + issueKey + " for test " + test.getFullDisplayName());
-                    } catch (RestClientException e) {
-                        listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
-                        e.printStackTrace(listener.getLogger());
-                    }
+                try {
+                    JiraUtils.createIssue(project, envVars, test);
+                } catch (RestClientException e) {
+                    listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
+                    e.printStackTrace(listener.getLogger());
                 }
             }
         }
