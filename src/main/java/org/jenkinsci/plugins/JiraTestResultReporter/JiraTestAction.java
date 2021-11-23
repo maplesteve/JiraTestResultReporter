@@ -35,7 +35,7 @@ import hudson.tasks.test.TestResult;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.taskdefs.condition.And;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
