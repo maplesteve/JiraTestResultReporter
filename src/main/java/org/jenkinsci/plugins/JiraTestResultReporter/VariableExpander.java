@@ -167,6 +167,17 @@ public class VariableExpander {
                 return "{TEST_IS_REGRESSION}";
             }
         });
+        
+        expanders.put("TEST_PACKAGE_CLASS_METHOD_NAME", new Delegate() {
+            @Override
+            public String expand(TestResult test, EnvVars envVars) {
+                if(test instanceof CaseResult) {
+                    CaseResult t = (CaseResult) test;
+                    return String.format("%s.%s", t.getClassName(), t.getName());
+                }
+                return "{TEST_PACKAGE_CLASS_METHOD_NAME}";
+            }
+        });
 
         expanders.put("BUILD_RESULT", new Delegate() {
             @Override
