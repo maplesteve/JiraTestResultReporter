@@ -18,6 +18,7 @@ package org.jenkinsci.plugins.JiraTestResultReporter;
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.domain.BasicIssue;
+import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.jira.rest.client.api.domain.SearchResult;
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
@@ -120,9 +121,14 @@ public class JiraUtils {
                 FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
                 String id = issueInput.getField(fi.getId()).getValue().toString();
                 JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", id));
+                for (Issue issue: searchResult.getIssues()) {
+                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issue.getKey());
+                }
                 return null;
             }
-            return JiraUtils.createIssueInput(issueInput);
+            String issueKey = JiraUtils.createIssueInput(issueInput);
+            TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
+            return issueKey;
         }
     }
     
@@ -160,6 +166,7 @@ public class JiraUtils {
         String jql = String.format("resolution = \"unresolved\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
 
         final Set<String > fields = new HashSet<>();
+        fields.add("issueKey");
         fields.add("summary");
         fields.add("issuetype");
         fields.add("created");
