@@ -11,7 +11,7 @@
   </parent>
 
   <properties>
-    <revision>2.0.11</revision>
+    <revision>2.0.12</revision>
     <changelist>-SNAPSHOT</changelist>
     <jenkins.version>2.321</jenkins.version>
     <jira-rest-client.version>5.2.2</jira-rest-client.version>

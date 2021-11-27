@@ -187,34 +187,39 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             JobConfigMapping.getInstance().saveConfig(project, getJobConfig());
         }
 
+        boolean hasTestData = false;
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
-            raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
+            hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
 
         if(JobConfigMapping.getInstance().getAutoResolveIssue(project)) {
-            resolveIssues(listener, project, job, envVars, getTestCaseResults(testResult));
+            hasTestData |= resolveIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
 
         if(JobConfigMapping.getInstance().getAutoUnlinkIssue(project)) {
-            unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
+            hasTestData |= unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
         }
-        return new JiraTestData(envVars);
+        return hasTestData ? new JiraTestData(envVars) : null;
 	}
 
-    private void unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+    private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+        boolean unlinked = false;
         for(CaseResult test : testCaseResults) {
             if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 synchronized (test.getId()) {
                     String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
                     TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
+                    unlinked = true;
                 }
             }
         }
+        return unlinked;
     }
 
-    private void resolveIssues(TaskListener listener, Job project, Job job,
+    private boolean resolveIssues(TaskListener listener, Job project, Job job,
                                EnvVars envVars, List<CaseResult> testCaseResults) {
 
+        boolean solved = false;
         for(CaseResult test : testCaseResults) {
             if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
                     && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
@@ -227,6 +232,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                         if (transition.getName().toLowerCase().contains("resolve")) {
                             issueRestClient.transition(issue, new TransitionInput(transition.getId()));
                             transitionExecuted = true;
+                            solved = true;
                             break;
                         }
                     }
@@ -238,20 +244,24 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 }
             }
         }
+        return solved;
     }
 
-    private void raiseIssues(TaskListener listener, Job project, Job job,
+    private boolean raiseIssues(TaskListener listener, Job project, Job job,
                              EnvVars envVars,List<CaseResult> testCaseResults) {
+        boolean raised = false;
         for(CaseResult test : testCaseResults) {
             if(test.isFailed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null) {
                 try {
-                    JiraUtils.createIssue(project, envVars, test);
+                    JiraUtils.createIssue(job, project, envVars, test);
+                    raised = true;
                 } catch (RestClientException e) {
                     listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
                     e.printStackTrace(listener.getLogger());
                 }
             }
         }
+        return raised;
     }
 
     private List<CaseResult> getTestCaseResults(TestResult testResult) {

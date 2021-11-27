@@ -17,12 +17,7 @@ package org.jenkinsci.plugins.JiraTestResultReporter;
 
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.RestClientException;
-import com.atlassian.jira.rest.client.api.domain.BasicIssue;
 import com.atlassian.jira.rest.client.api.domain.Issue;
-import com.atlassian.jira.rest.client.api.domain.SearchResult;
-import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
-import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -31,13 +26,10 @@ import hudson.matrix.MatrixProject;
 import hudson.model.*;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestAction;
-import hudson.tasks.test.TestResult;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.tools.ant.taskdefs.condition.And;
-import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
@@ -273,7 +265,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
         IssueRestClient restClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         try {
             Promise<Issue> issuePromise = restClient.getIssue(issueKey);
-            Issue issue = issuePromise.claim();
+            issuePromise.claim();
         }catch (RestClientException e) {
             JiraUtils.logError("Error when validating issue", e);
             return false;
