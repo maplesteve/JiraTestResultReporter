@@ -54,6 +54,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -199,7 +200,19 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         if(JobConfigMapping.getInstance().getAutoUnlinkIssue(project)) {
             hasTestData |= unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
         }
-        return hasTestData ? new JiraTestData(envVars) : null;
+        if (hasTestData) {
+            JiraTestData data = new JiraTestData(envVars);
+            TestResultAction action = run.getAction(TestResultAction.class);
+            if (action != null) {
+                List<TestResultAction.Data> dataList = new LinkedList<>();
+                dataList.add(data);
+                action.setData(dataList);
+                return null;
+            }
+            return data;
+        } else {
+            return null;
+        }
 	}
 
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
@@ -251,9 +264,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                              EnvVars envVars,List<CaseResult> testCaseResults) {
         boolean raised = false;
         for(CaseResult test : testCaseResults) {
-            if(test.isFailed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null) {
+            if(test.isFailed()) {
                 try {
-                    JiraUtils.createIssue(job, project, envVars, test);
+                    if (TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) == null || test.isFailed()) {
+                        JiraUtils.createIssue(job, project, envVars, test);
+                    }
                     raised = true;
                 } catch (RestClientException e) {
                     listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
