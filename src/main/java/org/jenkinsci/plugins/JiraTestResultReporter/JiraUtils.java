@@ -26,14 +26,17 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
 import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
-import hudson.model.AbstractProject;
 import hudson.model.Job;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.TestResult;
-import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 
+import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -126,7 +129,7 @@ public class JiraUtils {
                 }
                 return null;
             }
-            String issueKey = JiraUtils.createIssueInput(issueInput);
+            String issueKey = JiraUtils.createIssueInput(issueInput, test);
             TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
             return issueKey;
         }
@@ -146,10 +149,25 @@ public class JiraUtils {
         return newIssueBuilder.build();
     }
     
-    private static String createIssueInput(IssueInput issueInput) {
+    private static String createIssueInput(IssueInput issueInput, CaseResult test) {
         final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         Promise<BasicIssue> issuePromise = issueClient.createIssue(issueInput);
-        return issuePromise.claim().getKey();
+        String key = issuePromise.claim().getKey();
+        Issue issue = issueClient.getIssue(key).claim();
+        URI attachmentsUri = issue.getAttachmentsUri();
+        if (StringUtils.isNotBlank(test.getStderr())) {
+            issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getStderr().getBytes(StandardCharsets.UTF_8)), "stderr.out").claim();
+        }
+        if (StringUtils.isNotBlank(test.getStdout())) {
+            issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getStdout().getBytes(StandardCharsets.UTF_8)), "stdout.out").claim();
+        }
+        if (StringUtils.isNotBlank(test.getErrorStackTrace())) {
+            issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getErrorStackTrace().getBytes(StandardCharsets.UTF_8)), "stacktrace.out").claim();
+        }
+        if (StringUtils.isNotBlank(test.getErrorDetails())) {
+            issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getErrorDetails().getBytes(StandardCharsets.UTF_8)), "details.out").claim();
+        }
+        return key;
     }
     
     /**
