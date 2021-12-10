@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
+import com.atlassian.httpclient.api.ResponseTransformationException;
+import com.atlassian.httpclient.api.UnexpectedResponseException;
 import com.atlassian.jira.rest.client.api.*;
 import com.atlassian.jira.rest.client.api.domain.*;
 import com.atlassian.jira.rest.client.api.domain.Project;
@@ -233,29 +235,35 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                                EnvVars envVars, List<CaseResult> testCaseResults) {
 
         boolean solved = false;
-        for(CaseResult test : testCaseResults) {
-            if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
-                    && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                synchronized (test.getId()) {
-                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
-                    IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
-                    Issue issue = issueRestClient.getIssue(issueKey).claim();
-                    boolean transitionExecuted = false;
-                    for (Transition transition : issueRestClient.getTransitions(issue).claim()) {
-                        if (transition.getName().toLowerCase().contains("resolve")) {
-                            issueRestClient.transition(issue, new TransitionInput(transition.getId()));
-                            transitionExecuted = true;
-                            solved = true;
-                            break;
+        try {
+            for(CaseResult test : testCaseResults) {
+                if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
+                        && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+                    synchronized (test.getId()) {
+                        String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+                        IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
+                        Issue issue = issueRestClient.getIssue(issueKey).claim();
+                        boolean transitionExecuted = false;
+                        for (Transition transition : issueRestClient.getTransitions(issue).claim()) {
+                            if (transition.getName().toLowerCase().contains("resolve")) {
+                                issueRestClient.transition(issue, new TransitionInput(transition.getId()));
+                                transitionExecuted = true;
+                                solved = true;
+                                break;
+                            }
                         }
+    
+                        if (!transitionExecuted) {
+                            listener.getLogger().println("Could not find transition to resolve issue " + issueKey);
+                        }
+    
                     }
-
-                    if (!transitionExecuted) {
-                        listener.getLogger().println("Could not find transition to resolve issue " + issueKey);
-                    }
-
                 }
             }
+        } catch (RestClientException | ResponseTransformationException | UnexpectedResponseException e) {
+            listener.error("Could not connect properly to Jira server. Please review config details\n");
+            e.printStackTrace(listener.getLogger());
+            solved = false;
         }
         return solved;
     }
@@ -263,16 +271,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     private boolean raiseIssues(TaskListener listener, Job project, Job job,
                              EnvVars envVars,List<CaseResult> testCaseResults) {
         boolean raised = false;
-        for(CaseResult test : testCaseResults) {
-            if(test.isFailed()) {
-                try {
-                    JiraUtils.createIssue(job, project, envVars, test);
-                    raised = true;
-                } catch (RestClientException e) {
-                    listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
-                    e.printStackTrace(listener.getLogger());
+        try {
+            for(CaseResult test : testCaseResults) {
+                if(test.isFailed()) {
+                    try {
+                        JiraUtils.createIssue(job, project, envVars, test);
+                        raised = true;
+                    } catch (RestClientException e) {
+                        listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
+                        e.printStackTrace(listener.getLogger());
+                        throw e;
+                    }
                 }
             }
+        } catch (RestClientException | ResponseTransformationException | UnexpectedResponseException e) {
+            listener.error("Could not connect properly to Jira server. Please review config details\n");
+            e.printStackTrace(listener.getLogger());
+            raised = false;
         }
         return raised;
     }
