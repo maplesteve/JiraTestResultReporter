@@ -222,7 +222,7 @@ public class JiraUtils {
                 .replace("\\)", "\\\\)")
                 .replace("\\{", "\\\\{")
                 .replace("}", "\\\\}")
-                .replace("\\[", "\\\\[")
+                .replace("[", "\\\\[")
                 .replace("]", "\\\\]")
                 .replace("\\^", "\\\\^")
                 .replace("~", "\\\\~")
