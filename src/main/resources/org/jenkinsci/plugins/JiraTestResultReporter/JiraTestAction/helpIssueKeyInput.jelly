@@ -1,7 +1,7 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core">
+<j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
 
-<img src="${imagesURL}/16x16/help.png" style="width: 16px; height: 16px; cursor:pointer" onClick="hideshow(document.getElementById('help-issueKeyInput-${it}'))" />
+<l:icon class="icon-help icon-sm" style="cursor:pointer" onclick="hideshow(document.getElementById('help-issueKeyInput-${it}'))" />
 <div id="help-issueKeyInput-${it}" class="help" style="display:none">Link an existing issue to this test. Insert a valid issue key. (ex. TST-256)</div>
 
 </j:jelly>
