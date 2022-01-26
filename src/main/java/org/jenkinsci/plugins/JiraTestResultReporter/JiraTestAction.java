@@ -29,7 +29,7 @@ import hudson.tasks.junit.TestAction;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
