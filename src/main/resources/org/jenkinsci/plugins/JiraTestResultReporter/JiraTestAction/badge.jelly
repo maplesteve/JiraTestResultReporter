@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
     <script>
         /*
         Create a map of proxies, since this file will be included once for every test
@@ -12,7 +12,7 @@
 
     <j:choose>
         <j:when test="${ it.issueKey == null and it.isTestFailing() == true }">
-            <img src="${imagesURL}/16x16/document_add.png" onClick="hideshow(document.getElementById('jira-${it}'))" height="16" width="16" style="cursor:pointer"/> No issue
+            <l:icon class="icon-notepad icon-sm" onclick="hideshow(document.getElementById('jira-${it}'))" style="cursor:pointer"/> No issue
             <img src="${imagesURL}/spinner.gif" id="spinner-${it}" style="display:none"/>
             <div id="jira-${it}" style="display:none">
                 <a href="#jira" onClick="createNewIssue(document.getElementById('spinner-${it}'), '${it}', document.getElementById('jiraErrors-${it}'))">Create new issue</a><br/>

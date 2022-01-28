@@ -1,5 +1,5 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
     <j:choose>
         <j:when test="${ descriptor.restClient != null }">
             <f:entry title="Project Key" field="projectKey">
@@ -37,7 +37,7 @@
                         <span class="yui-button yui-push-button yui-button">
                             <button id="validateJiraIssueConfig" type="button" onClick="validateFieldConfings()">Validate Fields</button>
                         </span>
-                        <img src="${imagesURL}/16x16/help.png" style="width: 16px; height: 16px; cursor:pointer" onClick="hideshow(document.getElementById('helpValidateJiraIssueConfig'))"/>
+                        <l:icon class="icon-help icon-sm" style="cursor:pointer" onclick="hideshow(document.getElementById('helpValidateJiraIssueConfig'))"/>
                         <img src="${imagesURL}/spinner.gif" style="display:none" id="jiraSpinner"/>
                     </div>
                     <div id="helpValidateJiraIssueConfig" class="help" style="display:none">
