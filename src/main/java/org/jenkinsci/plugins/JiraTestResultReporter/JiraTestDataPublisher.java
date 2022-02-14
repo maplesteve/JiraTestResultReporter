@@ -220,10 +220,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
         boolean unlinked = false;
         for(CaseResult test : testCaseResults) {
-            if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                synchronized (test.getId()) {
-                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
-                    TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
+            if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
+                synchronized (test.getTransformedFullDisplayName()) {
+                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
+                    TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
                     unlinked = true;
                 }
             }
@@ -238,9 +238,9 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         try {
             for(CaseResult test : testCaseResults) {
                 if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
-                        && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
-                    synchronized (test.getId()) {
-                        String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+                        && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
+                    synchronized (test.getTransformedFullDisplayName()) {
+                        String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
                         IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
                         Issue issue = issueRestClient.getIssue(issueKey).claim();
                         boolean transitionExecuted = false;

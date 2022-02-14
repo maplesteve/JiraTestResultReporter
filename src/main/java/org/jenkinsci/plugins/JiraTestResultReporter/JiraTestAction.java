@@ -100,7 +100,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
 
         this.testData = testData;
         this.test = test;
-        issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+        issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
         if (issueKey != null) {
             IssueRestClient issueRestClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
             try {
@@ -172,13 +172,13 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @JavaScriptMethod
     public FormValidation setIssueKey(String issueKey) {
-        synchronized (test.getId()) {
-            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+        synchronized (test.getTransformedFullDisplayName()) {
+            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
                 return null;
             }
             if (isValidIssueKey(issueKey)) {
                 this.issueKey = issueKey;
-                TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
+                TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
                 return null;
             }
             return FormValidation.error("Not a valid issue key");
@@ -190,7 +190,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @JavaScriptMethod
     public void clearIssueKey() {
-        TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
+        TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
         issueKey = null;
     }
 

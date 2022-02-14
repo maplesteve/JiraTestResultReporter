@@ -113,8 +113,8 @@ public class JiraUtils {
     }
     
     public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test) throws RestClientException {
-        synchronized (test.getId()) { //avoid creating duplicated issues
-            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+        synchronized (test.getTransformedFullDisplayName()) { //avoid creating duplicated issues
+            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
                 return null;
             }
 
@@ -125,12 +125,12 @@ public class JiraUtils {
                 String id = issueInput.getField(fi.getId()).getValue().toString();
                 JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", id));
                 for (Issue issue: searchResult.getIssues()) {
-                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issue.getKey());
+                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issue.getKey());
                 }
                 return null;
             }
             String issueKey = JiraUtils.createIssueInput(issueInput, test);
-            TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
+            TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
             return issueKey;
         }
     }
