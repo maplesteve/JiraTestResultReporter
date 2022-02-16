@@ -220,10 +220,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
         boolean unlinked = false;
         for(CaseResult test : testCaseResults) {
-            if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
-                synchronized (test.getTransformedFullDisplayName()) {
-                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
-                    TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
+            if(test.isPassed() &&  TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
+                synchronized (test.getId()) {
+                    String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+                    TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
                     unlinked = true;
                 }
             }
@@ -237,26 +237,25 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         boolean solved = false;
         try {
             for(CaseResult test : testCaseResults) {
-                if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()
-                        && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
-                    synchronized (test.getTransformedFullDisplayName()) {
-                        String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
-                        IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
-                        Issue issue = issueRestClient.getIssue(issueKey).claim();
-                        boolean transitionExecuted = false;
-                        for (Transition transition : issueRestClient.getTransitions(issue).claim()) {
-                            if (transition.getName().toLowerCase().contains("resolve")) {
-                                issueRestClient.transition(issue, new TransitionInput(transition.getId()));
-                                transitionExecuted = true;
-                                solved = true;
-                                break;
+                if(test.isPassed() && test.getPreviousResult() != null && test.getPreviousResult().isFailed()) {
+                    synchronized (test.getId()) {
+                        for (String issueKey: JiraUtils.searchIssueKeys(job, envVars, test)) {
+                            IssueRestClient issueRestClient = getDescriptor().getRestClient().getIssueClient();
+                            Issue issue = issueRestClient.getIssue(issueKey).claim();
+                            boolean transitionExecuted = false;
+                            for (Transition transition : issueRestClient.getTransitions(issue).claim()) {
+                                if (transition.getName().toLowerCase().contains("resolve")) {
+                                    issueRestClient.transition(issue, new TransitionInput(transition.getId()));
+                                    transitionExecuted = true;
+                                    solved = true;
+                                    break;
+                                }
+                            }
+        
+                            if (!transitionExecuted) {
+                                listener.getLogger().println("Could not find transition to resolve issue " + issueKey);
                             }
                         }
-    
-                        if (!transitionExecuted) {
-                            listener.getLogger().println("Could not find transition to resolve issue " + issueKey);
-                        }
-    
                     }
                 }
             }

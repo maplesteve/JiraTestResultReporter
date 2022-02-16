@@ -100,11 +100,11 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
 
         this.testData = testData;
         this.test = test;
-        issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName());
-        if (issueKey != null) {
+        for (String key: JiraUtils.searchIssueKeys(job, testData.getEnvVars(), test)) {
+            issueKey = key;
             IssueRestClient issueRestClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
             try {
-                Issue issue = issueRestClient.getIssue(issueKey).claim();
+                Issue issue = issueRestClient.getIssue(key).claim();
                 issueStatus = issue.getStatus().getName();
                 issueSummary = issue.getSummary();
                 JiraTestDataPublisher.JiraTestDataPublisherDescriptor jiraDescriptor = JiraUtils.getJiraDescriptor();
@@ -172,13 +172,13 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @JavaScriptMethod
     public FormValidation setIssueKey(String issueKey) {
-        synchronized (test.getTransformedFullDisplayName()) {
-            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
+        synchronized (test.getId()) {
+            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
             }
             if (isValidIssueKey(issueKey)) {
                 this.issueKey = issueKey;
-                TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
+                TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
                 return null;
             }
             return FormValidation.error("Not a valid issue key");
@@ -190,7 +190,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @JavaScriptMethod
     public void clearIssueKey() {
-        TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
+        TestToIssueMapping.getInstance().removeTestToIssueMapping(job, test.getId(), issueKey);
         issueKey = null;
     }
 

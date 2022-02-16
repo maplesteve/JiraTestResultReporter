@@ -113,8 +113,8 @@ public class JiraUtils {
     }
     
     public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test) throws RestClientException {
-        synchronized (test.getTransformedFullDisplayName()) { //avoid creating duplicated issues
-            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getTransformedFullDisplayName()) != null) {
+        synchronized (test.getId()) { //avoid creating duplicated issues
+            if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
             }
 
@@ -125,13 +125,42 @@ public class JiraUtils {
                 String id = issueInput.getField(fi.getId()).getValue().toString();
                 JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", id));
                 for (Issue issue: searchResult.getIssues()) {
-                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issue.getKey());
+                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issue.getKey());
                 }
                 return null;
             }
             String issueKey = JiraUtils.createIssueInput(issueInput, test);
-            TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getTransformedFullDisplayName(), issueKey);
+            TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
             return issueKey;
+        }
+    }
+    
+    /**
+     * Given a test case result, it searchs for all the issue keys related with it
+     * from the local issue map or from the Jira server  
+     * @param job
+     * @param envVars
+     * @param test
+     * @return related issue keys from issue map or from Jira server
+     * @throws RestClientException
+     */
+    public static Set<String> searchIssueKeys(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
+        synchronized (test.getId()) {
+            Set<String> issueKeys = new HashSet<>();
+            String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+            if (StringUtils.isNotBlank(issueKey)) {
+                issueKeys.add(issueKey);
+                return issueKeys;
+            }
+            
+            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars);
+            SearchResult searchResult = JiraUtils.findIssues(job, test, envVars, issueInput);
+            if (searchResult != null && searchResult.getTotal() > 0) {
+                for (Issue issue: searchResult.getIssues()) {
+                    issueKeys.add(issue.getKey());
+                }
+            }
+            return issueKeys;
         }
     }
     
