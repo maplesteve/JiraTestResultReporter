@@ -135,6 +135,35 @@ public class JiraUtils {
         }
     }
     
+    /**
+     * Given a test case result, it searchs for all the issue keys related with it
+     * from the local issue map or from the Jira server  
+     * @param job
+     * @param envVars
+     * @param test
+     * @return related issue keys from issue map or from Jira server
+     * @throws RestClientException
+     */
+    public static Set<String> searchIssueKeys(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
+        synchronized (test.getId()) {
+            Set<String> issueKeys = new HashSet<>();
+            String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
+            if (StringUtils.isNotBlank(issueKey)) {
+                issueKeys.add(issueKey);
+                return issueKeys;
+            }
+            
+            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars);
+            SearchResult searchResult = JiraUtils.findIssues(job, test, envVars, issueInput);
+            if (searchResult != null && searchResult.getTotal() > 0) {
+                for (Issue issue: searchResult.getIssues()) {
+                    issueKeys.add(issue.getKey());
+                }
+            }
+            return issueKeys;
+        }
+    }
+    
     private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
