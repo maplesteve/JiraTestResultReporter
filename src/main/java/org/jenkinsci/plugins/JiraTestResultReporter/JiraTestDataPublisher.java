@@ -46,6 +46,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -508,11 +509,13 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @param password
          * @return
          */
+        @RequirePOST
         public FormValidation doValidateGlobal(@QueryParameter String jiraUrl,
                                                @QueryParameter String username,
                                                @QueryParameter String password
                                               ) {
 
+            Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             String serverName;
             try {
                 new URL(jiraUrl);
