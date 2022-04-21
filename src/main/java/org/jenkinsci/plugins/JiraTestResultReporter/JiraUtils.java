@@ -242,7 +242,7 @@ public class JiraUtils {
      * Unsupported:
      *  ! ( ) { } ^ ? \ /
      *
-     * Provides special support for parameterized tests [ ] 
+     * Provides special support for parameterized tests by ignoring the parameter in [ ] 
      * 
      * @param jql the JQL query.
      * @return the JQL query with special chars escaped.
