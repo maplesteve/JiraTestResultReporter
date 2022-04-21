@@ -121,13 +121,19 @@ public class JiraUtils {
             IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
             SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
+                boolean duplicate = false;
                 FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
-                String id = issueInput.getField(fi.getId()).getValue().toString();
-                JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", id));
+                String text = issueInput.getField(fi.getId()).getValue().toString();
                 for (Issue issue: searchResult.getIssues()) {
-                    TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issue.getKey());
+                    if (issue.getSummary().equals(text)) {
+                        JiraUtils.log(String.format("Ignoring creating issue '%s' as it would be a duplicate. (from Jira server)", text));
+                        duplicate = true;
+                        TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issue.getKey());
+                    }
                 }
-                return null;
+                if (duplicate) {
+                    return null;
+                }
             }
             String issueKey = JiraUtils.createIssueInput(issueInput, test);
             TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
@@ -230,35 +236,30 @@ public class JiraUtils {
     /**
      * Escape the JQL query of special characters.
      *
-     * Currently:
-     *  + - & | ! ( ) { } [ ] ^ ~ * ? \ / :
+     * Based on https://jira.atlassian.com/browse/JRASERVER-25092, currently supported:
+     *  + - & | ~ *
+     *  
+     * Unsupported:
+     *  ! ( ) { } ^ ? \ /
      *
-     * Reference:
-     *  https://confluence.atlassian.com/jiracoreserver073/search-syntax-for-text-fields-861257223.html
-     *
+     * Provides special support for parameterized tests by ignoring the parameter in [ ] 
+     * 
      * @param jql the JQL query.
      * @return the JQL query with special chars escaped.
      */
     static String escapeJQL(String jql) {
-        return jql.replace("'","\\'")
+        String result = jql.replace("'","\\'")
                 .replace("\"","\\\"")
                 .replace("\\+", "\\\\+")
                 .replace("-", "\\\\-")
                 .replace("&", "\\\\&")
                 .replace("\\|", "\\\\|")
-                .replace("!", "\\\\!")
-                .replace("\\(", "\\\\(")
-                .replace("\\)", "\\\\)")
-                .replace("\\{", "\\\\{")
-                .replace("}", "\\\\}")
-                .replace("[", "\\\\[")
-                .replace("]", "\\\\]")
-                .replace("\\^", "\\\\^")
                 .replace("~", "\\\\~")
-                .replace("\\*", "\\\\*")
-                .replace("\\?", "\\\\\\?")
-                .replace("\\\\","\\\\\\\\")
-                .replace("\\/", "\\\\/")
-                .replace(":", "\\\\\\\\:");
+                .replace("\\*", "\\\\*");
+        
+        if (result.contains("[")) {
+            result = result.substring(0, result.lastIndexOf("[")); // let's remove the parameter part
+        }
+        return result;
     }
 }
