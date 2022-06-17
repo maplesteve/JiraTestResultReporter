@@ -109,16 +109,16 @@ public class JiraUtils {
     }
     
     public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
-        return createIssue(job, job, envVars, test);
+        return createIssue(job, job, envVars, test, true);
     }
     
-    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test) throws RestClientException {
+    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, boolean fromJob) throws RestClientException {
         synchronized (test.getId()) { //avoid creating duplicated issues
             if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
             }
 
-            IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars);
+            IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars, fromJob);
             SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
                 boolean duplicate = false;
@@ -159,7 +159,7 @@ public class JiraUtils {
                 return issueKeys;
             }
             
-            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars);
+            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars, true);
             SearchResult searchResult = JiraUtils.findIssues(job, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
                 for (Issue issue: searchResult.getIssues()) {
@@ -170,16 +170,19 @@ public class JiraUtils {
         }
     }
     
-    private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars) {
+    private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars, boolean fromJob) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
                 JobConfigMapping.getInstance().getIssueType(project));
-        //first use the templates and then override them if other configs exist
+        //first use the templates and then override them if other configs exist and it is requested from a job execution (not UI badge)
         for(AbstractFields f : JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates) {
             newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
         }
-        for (AbstractFields f : JobConfigMapping.getInstance().getConfig(project)) {
-            newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
+        
+        if (fromJob) {
+            for (AbstractFields f : JobConfigMapping.getInstance().getConfig(project)) {
+                newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
+            }
         }
         return newIssueBuilder.build();
     }
