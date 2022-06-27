@@ -109,16 +109,16 @@ public class JiraUtils {
     }
     
     public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
-        return createIssue(job, job, envVars, test, true);
+        return createIssue(job, job, envVars, test, JiraIssueTrigger.JOB);
     }
     
-    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, boolean fromJob) throws RestClientException {
+    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger) throws RestClientException {
         synchronized (test.getId()) { //avoid creating duplicated issues
             if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
             }
 
-            IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars, fromJob);
+            IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars, trigger);
             SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
                 boolean duplicate = false;
@@ -159,7 +159,7 @@ public class JiraUtils {
                 return issueKeys;
             }
             
-            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars, true);
+            IssueInput issueInput = JiraUtils.createIssueInput(job, test, envVars, JiraIssueTrigger.JOB);
             SearchResult searchResult = JiraUtils.findIssues(job, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
                 for (Issue issue: searchResult.getIssues()) {
@@ -170,7 +170,7 @@ public class JiraUtils {
         }
     }
     
-    private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars, boolean fromJob) {
+    private static IssueInput createIssueInput(Job project, TestResult test, EnvVars envVars, JiraIssueTrigger trigger) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
                 JobConfigMapping.getInstance().getIssueType(project));
@@ -179,7 +179,7 @@ public class JiraUtils {
             newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
         }
         
-        if (fromJob) {
+        if (trigger.equals(JiraIssueTrigger.JOB)) {
             for (AbstractFields f : JobConfigMapping.getInstance().getConfig(project)) {
                 newIssueBuilder.setFieldInput(f.getFieldInput(test, envVars));
             }

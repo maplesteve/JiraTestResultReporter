@@ -247,7 +247,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     @JavaScriptMethod
     public FormValidation createIssue() {
         try {
-            String id = JiraUtils.createIssue(job, project, testData.getEnvVars(), test, false);
+            String id = JiraUtils.createIssue(job, project, testData.getEnvVars(), test, JiraIssueTrigger.UI);
             return StringUtils.isBlank(id) ? FormValidation.error("Duplicate already exists") : setIssueKey(id);  
         } catch (RestClientException e) {
             JiraUtils.logError("Error when creating issue", e);

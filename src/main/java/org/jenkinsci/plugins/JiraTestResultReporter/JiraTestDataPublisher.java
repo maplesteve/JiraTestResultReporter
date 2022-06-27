@@ -275,7 +275,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             for(CaseResult test : testCaseResults) {
                 if(test.isFailed()) {
                     try {
-                        JiraUtils.createIssue(job, project, envVars, test, true);
+                        JiraUtils.createIssue(job, project, envVars, test, JiraIssueTrigger.JOB);
                         raised = true;
                     } catch (RestClientException e) {
                         listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");
