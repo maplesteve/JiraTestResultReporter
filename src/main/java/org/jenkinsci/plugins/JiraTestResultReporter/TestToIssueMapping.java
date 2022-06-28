@@ -204,7 +204,7 @@ public class TestToIssueMapping {
         }
 
         synchronized (jobMap) {
-            if(jobMap.get(testId).equals(issueKey)) {
+            if(jobMap.get(testId) != null && jobMap.get(testId).equals(issueKey)) {
                 jobMap.remove(testId);
                 saveMap(job, jobMap);
             }
