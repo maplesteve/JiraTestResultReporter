@@ -24,24 +24,22 @@ import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
-import io.atlassian.util.concurrent.Promise;
 import hudson.EnvVars;
 import hudson.model.Job;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.TestResult;
+import io.atlassian.util.concurrent.Promise;
 import jenkins.model.Jenkins;
-
 import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  * Created by tuicu.
@@ -107,17 +105,44 @@ public class JiraUtils {
         }
         return errorMessages.toString();
     }
-    
+
     public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
         return createIssue(job, job, envVars, test, JiraIssueTrigger.JOB);
     }
-    
+
+    public static boolean cleanJobCacheFile(List<CaseResult> testCaseResults, Job testJob){
+        List<String> testNames = testCaseResults.stream().filter(CaseResult::isFailed).map( CaseResult::getId ).collect( Collectors.toList());
+        HashMap<String, String> keysToCheck = new HashMap<>();
+        List<String> jiraIds = new ArrayList<>();
+        for (String test : testNames){
+            if(TestToIssueMapping.getInstance().getTestIssueKey(testJob, test) != null) {
+                String jiraId = TestToIssueMapping.getInstance().getTestIssueKey(testJob, test);
+                jiraIds.add(jiraId);
+                keysToCheck.put(jiraId, test);
+            }
+        }
+        if(keysToCheck.isEmpty()) {
+            return false;
+        }
+
+        SearchResult searchResult = JiraUtils.findUnresolvedJiraIssues(String.join(",", jiraIds));
+        if (searchResult != null && searchResult.getTotal() > 0) {
+            for (Issue issue: searchResult.getIssues()) {
+                String testKey = issue.getKey();
+                String testId = keysToCheck.get(testKey);
+                synchronized (testId) {
+                    TestToIssueMapping.getInstance().removeTestToIssueMapping(testJob, testId, testKey);
+                }
+            }
+        }
+        return true;
+    }
+
     public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger) throws RestClientException {
         synchronized (test.getId()) { //avoid creating duplicated issues
             if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
             }
-
             IssueInput issueInput = JiraUtils.createIssueInput(project, test, envVars, trigger);
             SearchResult searchResult = JiraUtils.findIssues(project, test, envVars, issueInput);
             if (searchResult != null && searchResult.getTotal() > 0) {
@@ -221,6 +246,14 @@ public class JiraUtils {
         FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates.get(0).getFieldInput(test, envVars);
         String jql = String.format("resolution = \"unresolved\" and project = \"%s\" and text ~ \"%s\"", projectKey, escapeJQL(issueInput.getField(fi.getId()).getValue().toString()));
 
+        return getSearchResult(jql);
+    }
+    private static SearchResult findUnresolvedJiraIssues(String keys) throws RestClientException {
+        String jql = String.format("key in (%s) and resolution != \"unresolved\" ", keys);
+        return getSearchResult(jql);
+    }
+
+    private static SearchResult getSearchResult(String jql) {
         final Set<String > fields = new HashSet<>();
         fields.add("issueKey");
         fields.add("summary");
@@ -229,8 +262,7 @@ public class JiraUtils {
         fields.add("updated");
         fields.add("project");
         fields.add("status");
-
-        log(jql);
+        JiraUtils.log(jql);
 
         Promise<SearchResult> searchJqlPromise = JiraUtils.getJiraDescriptor().getRestClient().getSearchClient().searchJql(jql, 50, 0, fields);
         return searchJqlPromise.claim();

@@ -130,7 +130,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      */
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
-                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue) {
+                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue, boolean overrideResolvedIssues) {
 
         long defaultIssueType;
         try {
@@ -143,6 +143,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 .withProjectKey(projectKey)
                 .withIssueType(defaultIssueType)
                 .withAutoRaiseIssues(autoRaiseIssue)
+                .withOverrideResolvedIssues(overrideResolvedIssues)
                 .withAutoResolveIssues(autoResolveIssue)
                 .withAutoUnlinkIssues(autoUnlinkIssue)
                 .withConfigs(Util.fixNull(configs))
@@ -192,6 +193,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         boolean hasTestData = false;
+        if(JobConfigMapping.getInstance().getOverrideResolvedIssues(project)) {
+            hasTestData |= cleanJobCacheFile(listener, job, getTestCaseResults(testResult));
+        }
+
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
             hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
@@ -266,6 +271,18 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             solved = false;
         }
         return solved;
+    }
+    private boolean cleanJobCacheFile(TaskListener listener, Job job,
+                                      List<CaseResult> testCaseResults) {
+        boolean cleaUp = false;
+        try {
+            cleaUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
+        } catch (RestClientException e){
+            listener.error("Could not do the clean up of the JiraIssueJobConfigs.json\n");
+            e.printStackTrace(listener.getLogger());
+            throw e;
+        }
+        return cleaUp;
     }
 
     private boolean raiseIssues(TaskListener listener, Job project, Job job,
