@@ -47,6 +47,7 @@ public class JobConfigMapping {
         protected Long issueType;
         protected List<AbstractFields> configs;
         protected boolean autoRaiseIssue;
+        protected boolean overrideResolvedIssues;
         protected boolean autoResolveIssue;
         protected boolean autoUnlinkIssue;
         protected transient Pattern issueKeyPattern;
@@ -58,13 +59,15 @@ public class JobConfigMapping {
          * @param configs list with the configured fields
          */
         public JobConfigEntry(String projectKey, Long issueType, List<AbstractFields> configs,
-                              boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue) {
+                              boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue,
+                              boolean overrideResolvedIssues) {
             this.projectKey = projectKey;
             this.issueType = issueType;
             this.configs = configs;
             this.autoRaiseIssue = autoRaiseIssue;
             this.autoResolveIssue = autoResolveIssue;
             this.autoUnlinkIssue = autoUnlinkIssue;
+            this.overrideResolvedIssues = overrideResolvedIssues;
             compileIssueKeyPattern();
         }
 
@@ -93,6 +96,8 @@ public class JobConfigMapping {
         }
 
         public boolean getAutoRaiseIssue() { return autoRaiseIssue; }
+
+        public boolean getOverrideResolvedIssues() { return overrideResolvedIssues; }
 
         public boolean getAutoResolveIssue() { return  autoResolveIssue; }
 
@@ -127,7 +132,7 @@ public class JobConfigMapping {
          * Constructor
          */
         public JobConfigEntryBuilder() {
-            super(null, null, new ArrayList<>(), false, false, false);
+            super(null, null, new ArrayList<>(), false, false, false, false);
         }
 
         public JobConfigEntryBuilder withProjectKey(String projectKey) {
@@ -148,6 +153,11 @@ public class JobConfigMapping {
 
         public JobConfigEntryBuilder withAutoRaiseIssues(boolean autoRaiseIssues) {
             this.autoRaiseIssue = autoRaiseIssues;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withOverrideResolvedIssues(boolean overrideResolvedIssues) {
+            this.overrideResolvedIssues = overrideResolvedIssues;
             return this;
         }
 
@@ -320,8 +330,9 @@ public class JobConfigMapping {
                                         List<AbstractFields> configs,
                                         boolean autoRaiseIssue,
                                         boolean autoResolveIssue,
-                                        boolean autoUnlinkIssue) {
-        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue);
+                                        boolean autoUnlinkIssue,
+                                        boolean overrideResolvedIssues) {
+        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue, overrideResolvedIssues);
         saveConfig(project, entry);
     }
 
@@ -379,6 +390,11 @@ public class JobConfigMapping {
     public boolean getAutoRaiseIssue(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoRaiseIssue() : false;
+    }
+
+    public boolean getOverrideResolvedIssues(Job project) {
+        JobConfigEntry entry = getJobConfigEntry(project);
+        return entry != null ? entry.getOverrideResolvedIssues() : false;
     }
 
     public boolean getAutoResolveIssue(Job project) {
