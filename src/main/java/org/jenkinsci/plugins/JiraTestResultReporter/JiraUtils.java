@@ -274,8 +274,10 @@ public class JiraUtils {
      * Based on https://jira.atlassian.com/browse/JRASERVER-25092, currently supported:
      *  + - & | ~ *
      *  
+     * Also supported ? although JRSERVER-25092 defines the opposite
+     *  
      * Unsupported:
-     *  ! ( ) { } ^ ? \ /
+     *  ! ( ) { } ^ \ /
      *
      * Provides special support for parameterized tests by ignoring the parameter in [ ] 
      * 
@@ -290,7 +292,8 @@ public class JiraUtils {
                 .replace("&", "\\\\&")
                 .replace("\\|", "\\\\|")
                 .replace("~", "\\\\~")
-                .replace("\\*", "\\\\*");
+                .replace("\\*", "\\\\*")
+                .replace("?", "\\\\?");  // Although ? char is still not supported based on JRASERVER-25092
         
         if (result.contains("[")) {
             result = result.substring(0, result.lastIndexOf("[")); // let's remove the parameter part
