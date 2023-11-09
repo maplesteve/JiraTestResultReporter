@@ -212,9 +212,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             JiraTestData data = new JiraTestData(envVars);
             TestResultAction action = run.getAction(TestResultAction.class);
             if (action != null) {
-                List<TestResultAction.Data> dataList = new LinkedList<>();
-                dataList.add(data);
-                action.setData(dataList);
+                action.addData(data);
                 return null;
             }
             return data;
