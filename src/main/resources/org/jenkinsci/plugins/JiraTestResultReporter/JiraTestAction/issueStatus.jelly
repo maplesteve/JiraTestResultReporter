@@ -1,0 +1,53 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core">
+<j:choose>
+    <j:when test="${ it.statusColor == 'blue-gray' }">
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #e4e8ed;
+        color: #4a6785;">${it.issueStatus}</span>
+    </j:when>
+    <j:when test="${ it.statusColor == 'green' }">
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #b2d8b9;
+        color: #14892c;">${it.issueStatus}</span>
+    </j:when>
+    <j:when test="${ it.statusColor == 'yellow' }">
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #ffe28c;
+        color: #594300;">${it.issueStatus}</span>
+    </j:when>
+    <j:when test="${ it.statusColor == 'brown' }">
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #ece7e2;
+        color: #815b3a">${it.issueStatus}</span>
+    </j:when>
+    <j:when test="${ it.statusColor == 'medium-gray' }">
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #ccc;
+        color: #333;">${it.issueStatus}</span>
+    </j:when>
+    <j:otherwise> <!-- warm-red -->
+        <span style="
+        padding: 2px 4px 1px 4px; border: 1px solid; border-radius: 3px; vertical-align: text-bottom; white-space: nowrap;
+        overflow: hidden; text-overflow: ellipsis; max-width: 12em;
+        background-color: #fff;
+        border-color: #f8d3d1;
+        color: #d04437;">${it.issueStatus}</span>
+    </j:otherwise>
+</j:choose>
+</j:jelly>
