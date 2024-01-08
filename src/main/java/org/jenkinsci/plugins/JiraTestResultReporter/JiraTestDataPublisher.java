@@ -176,7 +176,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 	public TestResultAction.Data contributeTestData(Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher,
                                                     TaskListener listener, TestResult testResult)
                                                     throws IOException, InterruptedException {
-        EnvVars envVars = run.getEnvironment(listener);
+        
+	EnvVars envVars = run.getEnvironment(listener);
 
         Job job = run.getParent();
         Job project;
@@ -208,17 +209,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         if(JobConfigMapping.getInstance().getAutoUnlinkIssue(project)) {
             hasTestData |= unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
         }
-        if (hasTestData) {
-            JiraTestData data = new JiraTestData(envVars);
-            TestResultAction action = run.getAction(TestResultAction.class);
-            if (action != null) {
-                action.addData(data);
-                return null;
-            }
-            return data;
-        } else {
-            return null;
-        }
+        
+        return hasTestData? new JiraTestData(envVars) : null;
 	}
 
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
