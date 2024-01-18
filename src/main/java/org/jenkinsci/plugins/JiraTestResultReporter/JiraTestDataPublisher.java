@@ -210,8 +210,22 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             hasTestData |= unlinkIssuesForPassedTests(listener, project, job, envVars, getTestCaseResults(testResult));
         }
         
-        return hasTestData? new JiraTestData(envVars) : null;
+        if (hasTestData) {
+            // Workaround to make feasible to use the publisher in parallel executions
+            if (!reportedTestDataBefore(envVars)) {
+                JiraTestDataRegistry.getInstance().putJiraTestData(envVars);
+                return JiraTestDataRegistry.getInstance().getJiraTestData(envVars);
+            } else {
+                return null;
+            }
+        } else {
+            return null;
+        }
 	}
+
+    private boolean reportedTestDataBefore(EnvVars envVars) {
+        return JiraTestDataRegistry.getInstance().getJiraTestData(envVars) != null;
+    }
 
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
         boolean unlinked = false;
