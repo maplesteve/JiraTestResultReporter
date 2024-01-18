@@ -27,7 +27,7 @@ import java.util.List;
 /**
  * Created by tuicu.
  */
-public class JiraTestData extends TestResultAction.Data {    
+public class JiraTestData extends TestResultAction.Data {
     private EnvVars envVars;
 
     /**
@@ -45,8 +45,8 @@ public class JiraTestData extends TestResultAction.Data {
     public EnvVars getEnvVars() {
         return envVars;
     }
-    
-    
+
+
     /**
      * Method for creating test actions associated with tests
      * @param testObject

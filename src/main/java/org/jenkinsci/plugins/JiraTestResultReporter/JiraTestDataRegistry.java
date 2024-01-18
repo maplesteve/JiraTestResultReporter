@@ -21,14 +21,14 @@ public class JiraTestDataRegistry {
         return instance;
     }
 
-    public JiraTestData get(EnvVars envVars) {
+    public JiraTestData getJiraTestData(EnvVars envVars) {
         String key = envVars.get(BUILD_URL);
         synchronized (key) {
             return jiraTestDataByUrl.get(key);
         }
     }
 
-    public void put(EnvVars envVars) {
+    public void putJiraTestData(EnvVars envVars) {
         String key = envVars.get(BUILD_URL);
         synchronized (key) {
             jiraTestDataByUrl.put(key, new JiraTestData(envVars));

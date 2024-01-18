@@ -212,9 +212,9 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         
         if (hasTestData) {
             // Workaround to make feasible to use the publisher in parallel executions
-            if (notReportedTestDataBefore(envVars)) {
-                JiraTestDataRegistry.getInstance().put(envVars);
-                return JiraTestDataRegistry.getInstance().get(envVars);
+            if (!reportedTestDataBefore(envVars)) {
+                JiraTestDataRegistry.getInstance().putJiraTestData(envVars);
+                return JiraTestDataRegistry.getInstance().getJiraTestData(envVars);
             } else {
                 return null;
             }
@@ -223,8 +223,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 	}
 
-    private boolean notReportedTestDataBefore(EnvVars envVars) {
-        return JiraTestDataRegistry.getInstance().get(envVars) == null;
+    private boolean reportedTestDataBefore(EnvVars envVars) {
+        return JiraTestDataRegistry.getInstance().getJiraTestData(envVars) != null;
     }
 
     private boolean unlinkIssuesForPassedTests(TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
