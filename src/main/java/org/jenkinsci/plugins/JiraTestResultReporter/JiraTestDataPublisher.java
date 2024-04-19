@@ -30,6 +30,7 @@ import io.atlassian.util.concurrent.Promise;
 import hudson.*;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.*;
+import hudson.plugins.junitattachments.GetTestDataMethodObject;
 import hudson.tasks.junit.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -56,9 +57,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tuicu.
@@ -66,6 +69,9 @@ import java.util.List;
 public class JiraTestDataPublisher extends TestDataPublisher {
 
 	public static final boolean DEBUG = false;
+	
+	/** Attachments obtained from junit-attachments plugin if installed **/
+	private Map<String, Map<String, List<String>>> attachments = new HashMap<>();
 
     /**
      * Getter for the configured fields
@@ -102,7 +108,24 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     public boolean getAutoUnlinkIssue() {
         return JobConfigMapping.getInstance().getAutoUnlinkIssue(getJobName());
     }
-
+    
+    /**
+     * Getter for list of attachments by test method identified by its classname and name
+     * @param className
+     * @param name
+     * @return the list of attachments
+     */
+    public List<String> getAttachments(String className, String name) {
+        if (!this.attachments.containsKey(className)) {
+            return Collections.emptyList();
+        }
+        Map<String, List<String>> attachmentsByClassname = this.attachments.get(className);
+        if (!attachmentsByClassname.containsKey(name)) { 
+            return Collections.emptyList();
+        }
+        return attachmentsByClassname.get(name);
+    }
+    
     /**
      * Getter for the project associated with this publisher
      * @return
@@ -199,6 +222,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
+            GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
+            this.attachments = methodObject.getAttachments();
             hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
 
@@ -296,7 +321,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             for(CaseResult test : testCaseResults) {
                 if(test.isFailed()) {
                     try {
-                        JiraUtils.createIssue(job, project, envVars, test, JiraIssueTrigger.JOB);
+                        JiraUtils.createIssue(job, project, envVars, test, JiraIssueTrigger.JOB, getAttachments(test.getClassName(), test.getName()));
                         raised = true;
                     } catch (RestClientException e) {
                         listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");

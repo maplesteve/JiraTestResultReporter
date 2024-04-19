@@ -25,7 +25,9 @@ import com.atlassian.jira.rest.client.api.domain.input.IssueInput;
 import com.atlassian.jira.rest.client.api.domain.input.IssueInputBuilder;
 import com.atlassian.jira.rest.client.api.domain.util.ErrorCollection;
 import hudson.EnvVars;
+import hudson.FilePath;
 import hudson.model.Job;
+import hudson.plugins.junitattachments.AttachmentPublisher;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.test.TestResult;
 import io.atlassian.util.concurrent.Promise;
@@ -34,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -107,7 +110,7 @@ public class JiraUtils {
     }
 
     public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
-        return createIssue(job, job, envVars, test, JiraIssueTrigger.JOB);
+        return createIssue(job, job, envVars, test, JiraIssueTrigger.JOB, Collections.emptyList());
     }
 
     public static boolean cleanJobCacheFile(List<CaseResult> testCaseResults, Job testJob){
@@ -138,7 +141,7 @@ public class JiraUtils {
         return true;
     }
 
-    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger) throws RestClientException {
+    public static String createIssue(Job job, Job project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger, List<String> attachments) throws RestClientException {
         synchronized (test.getId()) { //avoid creating duplicated issues
             if(TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
                 return null;
@@ -160,7 +163,7 @@ public class JiraUtils {
                     return null;
                 }
             }
-            String issueKey = JiraUtils.createIssueInput(issueInput, test);
+            String issueKey = JiraUtils.createIssueInput(issueInput, test, attachments);
             TestToIssueMapping.getInstance().addTestToIssueMapping(job, test.getId(), issueKey);
             return issueKey;
         }
@@ -212,7 +215,7 @@ public class JiraUtils {
         return newIssueBuilder.build();
     }
     
-    private static String createIssueInput(IssueInput issueInput, CaseResult test) {
+    private static String createIssueInput(IssueInput issueInput, CaseResult test, List<String> attachments) {
         final IssueRestClient issueClient = JiraUtils.getJiraDescriptor().getRestClient().getIssueClient();
         Promise<BasicIssue> issuePromise = issueClient.createIssue(issueInput);
         String key = issuePromise.claim().getKey();
@@ -230,6 +233,20 @@ public class JiraUtils {
         if (StringUtils.isNotBlank(test.getErrorDetails())) {
             issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getErrorDetails().getBytes(StandardCharsets.UTF_8)), "details.out").claim();
         }
+        
+        FilePath attachmentStorage = AttachmentPublisher.getAttachmentPath(test.getRun());
+        try {
+            if (attachmentStorage.exists()) {
+                FilePath attachmentPath = AttachmentPublisher.getAttachmentPath(attachmentStorage, test.getClassName());
+                for (FilePath file : attachmentPath.list()) {
+                    if (attachments.contains(file.getName())) {
+                        issueClient.addAttachment(attachmentsUri, file.read(), file.getName()).claim();
+                    }
+                }
+            }
+        } catch (IOException | InterruptedException e) {
+            JiraUtils.log(String.format("Unable to access to attachment storage for %s:%s", test.getName(), test.getRun().getId()));
+        }        
         return key;
     }
     
