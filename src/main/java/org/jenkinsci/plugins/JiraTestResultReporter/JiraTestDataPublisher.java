@@ -70,7 +70,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
 	public static final boolean DEBUG = false;
 	
-	/** Attachments obtained from junit-attachments plugin if installed **/
+	/** Attachments obtained from junit-attachments plugin indexed by className and test method name **/
 	private Map<String, Map<String, List<String>>> attachments = new HashMap<>();
 
     /**
