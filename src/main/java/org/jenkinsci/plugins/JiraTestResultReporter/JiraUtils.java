@@ -245,7 +245,7 @@ public class JiraUtils {
                 }
             }
         } catch (IOException | InterruptedException e) {
-            JiraUtils.log(String.format("Unable to access to attachment storage for %s:%s", test.getName(), test.getRun().getId()));
+            JiraUtils.log(String.format("Unable to access attachment storage for %s:%s", test.getName(), test.getRun().getId()));
         }        
         return key;
     }
