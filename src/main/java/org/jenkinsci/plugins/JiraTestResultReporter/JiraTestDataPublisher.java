@@ -70,9 +70,6 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
 	public static final boolean DEBUG = false;
 	
-        /** Env var to specify if we want to include attachments from junit-attachments */ 
-        private static final String JIRA_INCLUDE_JUNIT_ATTACHMENTS = "JIRA_INCLUDE_JUNIT_ATTACHMENTS";
-    
         /** Attachments obtained from junit-attachments plugin indexed by className and test method name **/
 	private Map<String, Map<String, List<String>>> attachments = new HashMap<>();
 
@@ -156,7 +153,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      */
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
-                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue, boolean overrideResolvedIssues) {
+                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue, boolean overrideResolvedIssues, 
+                                 boolean additionalAttachments) {
 
         long defaultIssueType;
         try {
@@ -172,6 +170,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 .withOverrideResolvedIssues(overrideResolvedIssues)
                 .withAutoResolveIssues(autoResolveIssue)
                 .withAutoUnlinkIssues(autoUnlinkIssue)
+                .withAdditionalAttachments(additionalAttachments)
                 .withConfigs(Util.fixNull(configs))
                 .build();
 
@@ -225,7 +224,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
-            if (Boolean.getBoolean(envVars.get(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
+            if (JobConfigMapping.getInstance().getAdditionalAttachments(project)) {
                 JiraUtils.log("Obtaining junit-attachments ...");
                 GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
                 this.attachments = methodObject.getAttachments();

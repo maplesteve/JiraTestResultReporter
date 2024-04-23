@@ -50,6 +50,7 @@ public class JobConfigMapping {
         protected boolean overrideResolvedIssues;
         protected boolean autoResolveIssue;
         protected boolean autoUnlinkIssue;
+        protected boolean additionalAttachments;
         protected transient Pattern issueKeyPattern;
 
         /**
@@ -60,7 +61,7 @@ public class JobConfigMapping {
          */
         public JobConfigEntry(String projectKey, Long issueType, List<AbstractFields> configs,
                               boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue,
-                              boolean overrideResolvedIssues) {
+                              boolean overrideResolvedIssues, boolean additionalAttachments) {
             this.projectKey = projectKey;
             this.issueType = issueType;
             this.configs = configs;
@@ -68,6 +69,7 @@ public class JobConfigMapping {
             this.autoResolveIssue = autoResolveIssue;
             this.autoUnlinkIssue = autoUnlinkIssue;
             this.overrideResolvedIssues = overrideResolvedIssues;
+            this.additionalAttachments = additionalAttachments;
             compileIssueKeyPattern();
         }
 
@@ -102,6 +104,8 @@ public class JobConfigMapping {
         public boolean getAutoResolveIssue() { return  autoResolveIssue; }
 
         public boolean getAutoUnlinkIssue() { return autoUnlinkIssue; }
+        
+        public boolean getAdditionalAttachments() { return additionalAttachments; }
 
         /**
          * Getter for the issue key pattern
@@ -132,7 +136,7 @@ public class JobConfigMapping {
          * Constructor
          */
         public JobConfigEntryBuilder() {
-            super(null, null, new ArrayList<>(), false, false, false, false);
+            super(null, null, new ArrayList<>(), false, false, false, false, false);
         }
 
         public JobConfigEntryBuilder withProjectKey(String projectKey) {
@@ -168,6 +172,11 @@ public class JobConfigMapping {
 
         public JobConfigEntryBuilder withAutoUnlinkIssues(boolean autoUnlinkIssues) {
             this.autoUnlinkIssue = autoUnlinkIssues;
+            return this;
+        }
+        
+        public JobConfigEntryBuilder withAdditionalAttachments(boolean additionalAttachments) {
+            this.additionalAttachments = additionalAttachments;
             return this;
         }
 
@@ -331,8 +340,9 @@ public class JobConfigMapping {
                                         boolean autoRaiseIssue,
                                         boolean autoResolveIssue,
                                         boolean autoUnlinkIssue,
-                                        boolean overrideResolvedIssues) {
-        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue, overrideResolvedIssues);
+                                        boolean overrideResolvedIssues,
+                                        boolean additionalAttachments) {
+        JobConfigEntry entry = new JobConfigEntry(projectKey, issueType, configs, autoRaiseIssue, autoResolveIssue, autoUnlinkIssue, overrideResolvedIssues, additionalAttachments);
         saveConfig(project, entry);
     }
 
@@ -407,6 +417,11 @@ public class JobConfigMapping {
         return entry != null ? entry.getAutoUnlinkIssue() : false;
     }
 
+    public boolean getAdditionalAttachments(Job project) {
+        JobConfigEntry entry = getJobConfigEntry(project);
+        return entry != null ? entry.getAdditionalAttachments() : false;
+    }
+    
     /**
      * Getter for the issue key pattern, used to validate user input
      * @param project
