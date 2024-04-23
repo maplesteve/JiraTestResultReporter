@@ -68,7 +68,7 @@ import java.util.Map;
  */
 public class JiraTestDataPublisher extends TestDataPublisher {
 
-    public static final boolean DEBUG = false;
+	public static final boolean DEBUG = false;
 	
         /** Env var to specify if we want to include attachments from junit-attachments */ 
         private static final String JIRA_INCLUDE_JUNIT_ATTACHMENTS = "JIRA_INCLUDE_JUNIT_ATTACHMENTS";
