@@ -234,19 +234,21 @@ public class JiraUtils {
             issueClient.addAttachment(attachmentsUri, new ByteArrayInputStream(test.getErrorDetails().getBytes(StandardCharsets.UTF_8)), "details.out").claim();
         }
         
-        FilePath attachmentStorage = AttachmentPublisher.getAttachmentPath(test.getRun());
-        try {
-            if (attachmentStorage.exists()) {
-                FilePath attachmentPath = AttachmentPublisher.getAttachmentPath(attachmentStorage, test.getClassName());
-                for (FilePath file : attachmentPath.list()) {
-                    if (attachments.contains(file.getName())) {
-                        issueClient.addAttachment(attachmentsUri, file.read(), file.getName()).claim();
+        if (!attachments.isEmpty()) {
+            FilePath attachmentStorage = AttachmentPublisher.getAttachmentPath(test.getRun());
+            try {
+                if (attachmentStorage.exists()) {
+                    FilePath attachmentPath = AttachmentPublisher.getAttachmentPath(attachmentStorage, test.getClassName());
+                    for (FilePath file : attachmentPath.list()) {
+                        if (attachments.contains(file.getName())) {
+                            issueClient.addAttachment(attachmentsUri, file.read(), file.getName()).claim();
+                        }
                     }
                 }
+            } catch (IOException | InterruptedException e) {
+                JiraUtils.log(String.format("Unable to access attachment storage for %s:%s", test.getName(), test.getRun().getId()));
             }
-        } catch (IOException | InterruptedException e) {
-            JiraUtils.log(String.format("Unable to access attachment storage for %s:%s", test.getName(), test.getRun().getId()));
-        }        
+        }
         return key;
     }
     

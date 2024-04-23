@@ -68,9 +68,12 @@ import java.util.Map;
  */
 public class JiraTestDataPublisher extends TestDataPublisher {
 
-	public static final boolean DEBUG = false;
+    public static final boolean DEBUG = false;
 	
-	/** Attachments obtained from junit-attachments plugin indexed by className and test method name **/
+        /** Env var to specify if we want to include attachments from junit-attachments */ 
+        private static final String JIRA_INCLUDE_JUNIT_ATTACHMENTS = "JIRA_INCLUDE_JUNIT_ATTACHMENTS";
+    
+        /** Attachments obtained from junit-attachments plugin indexed by className and test method name **/
 	private Map<String, Map<String, List<String>>> attachments = new HashMap<>();
 
     /**
@@ -222,8 +225,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
-            GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
-            this.attachments = methodObject.getAttachments();
+            if (Boolean.getBoolean(envVars.get(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
+                GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
+                this.attachments = methodObject.getAttachments();
+            }
             hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
 
