@@ -204,7 +204,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                                                     throws IOException, InterruptedException {
         
 	EnvVars envVars = run.getEnvironment(listener);
-
+	
         Job job = run.getParent();
         Job project;
         if (job instanceof MatrixConfiguration) {
@@ -225,9 +225,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
-            if (Boolean.getBoolean(System.getenv(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
+            if (Boolean.getBoolean(envVars.get(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
+                JiraUtils.log("Obtaining junit-attachments ...");
                 GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
                 this.attachments = methodObject.getAttachments();
+                JiraUtils.log("junit-attachments successfully retrieved");
             }
             hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
