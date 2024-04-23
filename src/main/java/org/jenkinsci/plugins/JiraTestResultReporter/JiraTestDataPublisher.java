@@ -225,7 +225,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
-            if (Boolean.getBoolean(envVars.get(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
+            if (Boolean.getBoolean(System.getenv(JIRA_INCLUDE_JUNIT_ATTACHMENTS))) {
                 GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
                 this.attachments = methodObject.getAttachments();
             }
