@@ -26,6 +26,8 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import io.atlassian.util.concurrent.Promise;
 import hudson.*;
 import hudson.matrix.MatrixConfiguration;
@@ -144,6 +146,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
     private JobConfigMapping.JobConfigEntry getJobConfig() {
         return jobConfig;
+    }
+    
+    @CheckForNull
+    public boolean getAdditionalAttachments() {
+        return jobConfig.getAdditionalAttachments();
     }
     
     @DataBoundSetter
