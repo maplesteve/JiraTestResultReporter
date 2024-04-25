@@ -190,7 +190,6 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 .withOverrideResolvedIssues(overrideResolvedIssues)
                 .withAutoResolveIssues(autoResolveIssue)
                 .withAutoUnlinkIssues(autoUnlinkIssue)
-                .withAdditionalAttachments(false)
                 .withConfigs(Util.fixNull(configs))
                 .build();
 
