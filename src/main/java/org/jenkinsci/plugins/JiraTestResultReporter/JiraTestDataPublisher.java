@@ -43,6 +43,7 @@ import org.jenkinsci.plugins.JiraTestResultReporter.config.StringFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.JiraRestClientExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -144,17 +145,36 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     private JobConfigMapping.JobConfigEntry getJobConfig() {
         return jobConfig;
     }
+    
+    @DataBoundSetter
+    public void setAdditionalAttachments(boolean additionalAttachments) {
+        JiraUtils.log(String.format("Additional attachments field configured as %s", additionalAttachments));
+        this.jobConfig = new JobConfigMapping.JobConfigEntryBuilder()
+                .withProjectKey(this.jobConfig.getProjectKey())
+                .withIssueType(this.jobConfig.getIssueType())
+                .withAutoRaiseIssues(this.jobConfig.getAutoRaiseIssue())
+                .withOverrideResolvedIssues(this.jobConfig.getOverrideResolvedIssues())
+                .withAutoResolveIssues(this.jobConfig.getAutoResolveIssue())
+                .withAutoUnlinkIssues(this.jobConfig.getAutoUnlinkIssue())
+                .withAdditionalAttachments(additionalAttachments)
+                .withConfigs(this.jobConfig.getConfigs())
+                .build();
+    }
+    
 
     /**
      * Constructor
      * @param configs a list with the configured fields
      * @param projectKey
      * @param issueType
+     * @param autoRaiseIssue
+     * @param autoResolveIssue
+     * @param autoUnlinkIssue
+     * @param overrideResolvedIssues
      */
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
-                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue, boolean overrideResolvedIssues, 
-                                 boolean additionalAttachments) {
+                                 boolean autoRaiseIssue, boolean autoResolveIssue, boolean autoUnlinkIssue, boolean overrideResolvedIssues) {
 
         long defaultIssueType;
         try {
@@ -170,7 +190,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 .withOverrideResolvedIssues(overrideResolvedIssues)
                 .withAutoResolveIssues(autoResolveIssue)
                 .withAutoUnlinkIssues(autoUnlinkIssue)
-                .withAdditionalAttachments(additionalAttachments)
+                .withAdditionalAttachments(false)
                 .withConfigs(Util.fixNull(configs))
                 .build();
 
