@@ -222,7 +222,6 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                                                     throws IOException, InterruptedException {
         
 	EnvVars envVars = run.getEnvironment(listener);
-	
         Job job = run.getParent();
         Job project;
         if (job instanceof MatrixConfiguration) {
