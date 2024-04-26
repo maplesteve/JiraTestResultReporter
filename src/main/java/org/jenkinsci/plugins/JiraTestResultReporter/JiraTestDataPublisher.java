@@ -26,10 +26,13 @@ import com.atlassian.jira.rest.client.api.domain.input.TransitionInput;
 import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import io.atlassian.util.concurrent.Promise;
 import hudson.*;
 import hudson.matrix.MatrixConfiguration;
 import hudson.model.*;
+import hudson.plugins.junitattachments.GetTestDataMethodObject;
 import hudson.tasks.junit.*;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
@@ -42,6 +45,7 @@ import org.jenkinsci.plugins.JiraTestResultReporter.config.StringFields;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.FullStatus;
 import org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions.JiraRestClientExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
@@ -56,9 +60,11 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tuicu.
@@ -66,6 +72,9 @@ import java.util.List;
 public class JiraTestDataPublisher extends TestDataPublisher {
 
 	public static final boolean DEBUG = false;
+	
+        /** Attachments obtained from junit-attachments plugin indexed by className and test method name **/
+	private Map<String, Map<String, List<String>>> attachments = new HashMap<>();
 
     /**
      * Getter for the configured fields
@@ -102,7 +111,24 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     public boolean getAutoUnlinkIssue() {
         return JobConfigMapping.getInstance().getAutoUnlinkIssue(getJobName());
     }
-
+    
+    /**
+     * Getter for list of attachments by test method identified by its classname and name
+     * @param className
+     * @param name
+     * @return the list of attachments
+     */
+    public List<String> getAttachments(String className, String name) {
+        if (!this.attachments.containsKey(className)) {
+            return Collections.emptyList();
+        }
+        Map<String, List<String>> attachmentsByClassname = this.attachments.get(className);
+        if (!attachmentsByClassname.containsKey(name)) { 
+            return Collections.emptyList();
+        }
+        return attachmentsByClassname.get(name);
+    }
+    
     /**
      * Getter for the project associated with this publisher
      * @return
@@ -121,12 +147,37 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     private JobConfigMapping.JobConfigEntry getJobConfig() {
         return jobConfig;
     }
+    
+    @CheckForNull
+    public boolean getAdditionalAttachments() {
+        return jobConfig.getAdditionalAttachments();
+    }
+    
+    @DataBoundSetter
+    public void setAdditionalAttachments(boolean additionalAttachments) {
+        JiraUtils.log(String.format("Additional attachments field configured as %s", additionalAttachments));
+        this.jobConfig = new JobConfigMapping.JobConfigEntryBuilder()
+                .withProjectKey(this.jobConfig.getProjectKey())
+                .withIssueType(this.jobConfig.getIssueType())
+                .withAutoRaiseIssues(this.jobConfig.getAutoRaiseIssue())
+                .withOverrideResolvedIssues(this.jobConfig.getOverrideResolvedIssues())
+                .withAutoResolveIssues(this.jobConfig.getAutoResolveIssue())
+                .withAutoUnlinkIssues(this.jobConfig.getAutoUnlinkIssue())
+                .withAdditionalAttachments(additionalAttachments)
+                .withConfigs(this.jobConfig.getConfigs())
+                .build();
+    }
+    
 
     /**
      * Constructor
      * @param configs a list with the configured fields
      * @param projectKey
      * @param issueType
+     * @param autoRaiseIssue
+     * @param autoResolveIssue
+     * @param autoUnlinkIssue
+     * @param overrideResolvedIssues
      */
 	@DataBoundConstructor
 	public JiraTestDataPublisher(List<AbstractFields> configs, String projectKey, String issueType,
@@ -178,7 +229,6 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                                                     throws IOException, InterruptedException {
         
 	EnvVars envVars = run.getEnvironment(listener);
-
         Job job = run.getParent();
         Job project;
         if (job instanceof MatrixConfiguration) {
@@ -199,6 +249,12 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         }
 
         if(JobConfigMapping.getInstance().getAutoRaiseIssue(project)) {
+            if (JobConfigMapping.getInstance().getAdditionalAttachments(project)) {
+                JiraUtils.log("Obtaining junit-attachments ...");
+                GetTestDataMethodObject methodObject = new GetTestDataMethodObject(run, workspace, launcher, listener, testResult);
+                this.attachments = methodObject.getAttachments();
+                JiraUtils.log("junit-attachments successfully retrieved");
+            }
             hasTestData |= raiseIssues(listener, project, job, envVars, getTestCaseResults(testResult));
         }
 
@@ -296,7 +352,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             for(CaseResult test : testCaseResults) {
                 if(test.isFailed()) {
                     try {
-                        JiraUtils.createIssue(job, project, envVars, test, JiraIssueTrigger.JOB);
+                        JiraUtils.createIssue(job, project, envVars, test, JiraIssueTrigger.JOB, getAttachments(test.getClassName(), test.getName()));
                         raised = true;
                     } catch (RestClientException e) {
                         listener.error("Could not create issue for test " + test.getFullDisplayName() + "\n");

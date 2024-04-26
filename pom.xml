@@ -137,6 +137,10 @@
       <artifactId>matrix-project</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>junit-attachments</artifactId>
+    </dependency>
+    <dependency>
       <groupId>com.atlassian.jira</groupId>
       <artifactId>jira-rest-java-client-api</artifactId>
       <version>${jira-rest-client.version}</version>
