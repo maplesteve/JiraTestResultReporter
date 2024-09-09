@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
@@ -118,6 +120,7 @@ public class JobConfigMapping {
          * See Java documentation for more details.
          * @return this object
          */
+        @SuppressFBWarnings(value = "SE_PRIVATE_READ_RESOLVE_NOT_INHERITED")
         private Object readResolve() {
             compileIssueKeyPattern();
             return this;

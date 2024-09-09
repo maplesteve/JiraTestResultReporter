@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.atlassian.jira.rest.client.api.IdentifiableEntity;
 import com.atlassian.jira.rest.client.api.NamedEntity;
 import com.atlassian.jira.rest.client.api.domain.CustomFieldOption;
@@ -40,6 +42,7 @@ import java.util.List;
  * Created by tuicu.
  * Class for fields with predefined values, that can have multiple values (ex. Components, Fix Versions, etc.)
  */
+@SuppressFBWarnings(value = {"DE_MIGHT_IGNORE","RE_CATCH_EXCEPTION"})
 public class SelectableArrayFields extends AbstractFields {
     public static final long serialVersionUID = 312389869891081321L;
     private String fieldKey;
@@ -106,6 +109,7 @@ public class SelectableArrayFields extends AbstractFields {
      */
     @Symbol("jiraSelectableArrayField")
     @Extension
+    @SuppressFBWarnings(value = {"DCN_NULLPOINTER_EXCEPTION","REC_CATCH_EXCEPTION"})
     public static class SelectableArrayFieldsDescriptor extends Descriptor<AbstractFields> {
 
         @Override
