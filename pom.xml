@@ -12,7 +12,7 @@
 
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <jenkins.version>2.321</jenkins.version>
+    <jenkins.version>2.462</jenkins.version>
     <jira-rest-client.version>5.2.2</jira-rest-client.version>
     <fugue.version>3.0.0</fugue.version>
     <spotbugs.failOnError>false</spotbugs.failOnError>
@@ -118,8 +118,8 @@
     <dependencies>
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-2.319.x</artifactId>
-        <version>1013.vf8058992a042</version>
+        <artifactId>bom-2.462.x</artifactId>
+        <version>3334.v18e2a_2f48356</version>
         <scope>import</scope>
         <type>pom</type>
       </dependency>
