@@ -1,5 +1,7 @@
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.atlassian.jira.rest.client.api.RestClientException;
 import com.atlassian.jira.rest.client.api.UserRestClient;
 import com.atlassian.jira.rest.client.api.domain.User;
@@ -22,6 +24,7 @@ import org.kohsuke.stapler.QueryParameter;
  * Created by tuicu on 17/08/16.
  * Class for fields that accept user values
  */
+@SuppressFBWarnings(value = "SE_NO_SERIALVERSIONID")
 public class UserFields extends AbstractFields {
     private String fieldKey;
     private String value;
@@ -71,6 +74,7 @@ public class UserFields extends AbstractFields {
 
     @Symbol("jiraUserField")
     @Extension
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION")
     public static class UserFieldsDescriptor extends Descriptor<AbstractFields> {
         @Override
         public String getDisplayName() {

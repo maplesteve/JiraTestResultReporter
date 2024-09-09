@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -36,6 +38,7 @@ import java.util.List;
  * Created by tuicu.
  * Class for fields that accept multiple string values
  */
+@SuppressFBWarnings(value = "DC_NULLPOINTER_EXCEPTION")
 public class StringArrayFields extends AbstractFields {
     public static final long serialVersionUID = -8871121603596592222L;
     private String fieldKey;
@@ -97,6 +100,7 @@ public class StringArrayFields extends AbstractFields {
      */
     @Symbol("jiraStringArrayField")
     @Extension
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION")
     public static class StringArrayFieldsDescriptor extends Descriptor<AbstractFields> {
 
         @Override

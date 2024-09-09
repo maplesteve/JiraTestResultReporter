@@ -28,6 +28,7 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFacto
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.atlassian.util.concurrent.Promise;
 import hudson.*;
 import hudson.matrix.MatrixConfiguration;
@@ -416,6 +417,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         private static final String DEFAULT_SUMMARY = "${TEST_FULL_NAME} : ${TEST_ERROR_DETAILS}";
         private static final String DEFAULT_DESCRIPTION = "${BUILD_URL}${CRLF}${TEST_STACK_TRACE}";
+        @SuppressFBWarnings(value = "MS_MUTABLE_COLLECTION_PKGPROTECT")
         public static final List<AbstractFields> templates;
         public static final StringFields DEFAULT_SUMMARY_FIELD;
         public static final StringFields DEFAULT_DESCRIPTION_FIELD;
@@ -587,6 +589,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @return
          */
         @RequirePOST
+        @SuppressFBWarnings(value = "RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE")
         public FormValidation doValidateGlobal(@QueryParameter String jiraUrl,
                                                @QueryParameter String username,
                                                @QueryParameter String password
@@ -684,6 +687,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @throws InterruptedException
          */
         @JavaScriptMethod
+        @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH","WMI_WRONG_MAP_ITERATOR"})
         public FormValidation validateFieldConfigs(String jsonForm) throws FormException, InterruptedException {
             // extracting the configurations for associated with this plugin (we receive the entire form)
             StaplerRequest req = Stapler.getCurrentRequest();
