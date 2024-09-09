@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.atlassian.jira.rest.client.api.domain.input.FieldInput;
 import hudson.EnvVars;
 import hudson.Extension;
@@ -33,6 +35,7 @@ import org.kohsuke.stapler.QueryParameter;
  * Created by tuicu.
  * Class for fields that accept single string values
  */
+@SuppressFBWarnings(value = "DC_NULLPOINTER_EXCEPTION")
 public class StringFields extends AbstractFields {
     public static final long serialVersionUID = 4298649925601364399L;
     private static final ListBoxModel DEFAULT_MODEL;
@@ -95,6 +98,7 @@ public class StringFields extends AbstractFields {
      */
     @Symbol("jiraStringField")
     @Extension
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION")
     public static class StringFieldsDescriptor extends Descriptor<AbstractFields> {
 
         @Override

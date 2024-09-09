@@ -35,6 +35,7 @@ import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -247,7 +248,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     @JavaScriptMethod
     public FormValidation createIssue() {
         try {
-            String id = JiraUtils.createIssue(job, project, testData.getEnvVars(), test, JiraIssueTrigger.UI);
+            String id = JiraUtils.createIssue(job, project, testData.getEnvVars(), test, JiraIssueTrigger.UI, Collections.emptyList());
             return StringUtils.isBlank(id) ? FormValidation.error("Duplicate already exists") : setIssueKey(id);  
         } catch (RestClientException e) {
             JiraUtils.logError("Error when creating issue", e);

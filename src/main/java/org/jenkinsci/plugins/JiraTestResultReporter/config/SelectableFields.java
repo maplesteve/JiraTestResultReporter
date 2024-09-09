@@ -15,6 +15,8 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 import com.atlassian.jira.rest.client.api.IdentifiableEntity;
 import com.atlassian.jira.rest.client.api.NamedEntity;
 import com.atlassian.jira.rest.client.api.domain.CustomFieldOption;
@@ -36,6 +38,7 @@ import org.kohsuke.stapler.QueryParameter;
  * Created by tuicu.
  * Class for fields with a single, predefined value (ex. Priority)
  */
+@SuppressFBWarnings(value = "DC_NULLPOINTER_EXCEPTION")
 public class SelectableFields extends AbstractFields {
     public static final long serialVersionUID = 7570781225890517710L;
     private String fieldKey;
@@ -96,6 +99,7 @@ public class SelectableFields extends AbstractFields {
      */
     @Symbol("jiraSelectableField")
     @Extension
+    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION")
     public static class SelectableFieldsDescriptor extends Descriptor<AbstractFields> {
         @Override
         public String getDisplayName() {
