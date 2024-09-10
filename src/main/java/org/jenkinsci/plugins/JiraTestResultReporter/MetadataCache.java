@@ -15,8 +15,6 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.atlassian.jira.rest.client.api.GetCreateIssueMetadataOptions;
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.domain.CimFieldInfo;
@@ -125,7 +123,6 @@ public class MetadataCache {
      * @param issueType
      * @return
      */
-    @SuppressFBWarnings(value = "DCN_NULLPOINTER_EXCEPTION")
     public CacheEntry getCacheEntry(String projectKey, String issueType) {
         CacheEntry cacheEntry;
         try{

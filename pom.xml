@@ -12,12 +12,11 @@
 
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
-    <jenkins.version>2.462</jenkins.version>
-    <jira-rest-client.version>5.2.6</jira-rest-client.version>
-    <fugue.version>3.0.0</fugue.version>
-    <spotbugs.failOnError>false</spotbugs.failOnError>
-    <java.level>11</java.level>
+    <jenkins.version>2.462.1</jenkins.version>
+    <jira-rest-client.version>5.2.7</jira-rest-client.version>
+    <fugue.version>4.7.2</fugue.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+    <spotbugs.threshold>High</spotbugs.threshold>
   </properties>
 
   <groupId>org.jenkins-ci.plugins</groupId>
@@ -68,7 +67,7 @@
   </developers>
 
   <scm>
-    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
     <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
     <url>https://github.com/${gitHubRepo}</url>
     <tag>${scmTag}</tag>
@@ -79,38 +78,12 @@
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
     </repository>
-
-    <repository>
-    <id>atlassian-public</id>
-    <url>https://m2proxy.atlassian.com/repository/public</url>
-    <snapshots>
-      <enabled>true</enabled>
-      <updatePolicy>daily</updatePolicy>
-      <checksumPolicy>warn</checksumPolicy>
-    </snapshots>
-    <releases>
-      <enabled>true</enabled>
-      <checksumPolicy>warn</checksumPolicy>
-    </releases>
-    </repository>
   </repositories>
 
   <pluginRepositories>
     <pluginRepository>
       <id>repo.jenkins-ci.org</id>
       <url>https://repo.jenkins-ci.org/public/</url>
-    </pluginRepository>
-
-    <pluginRepository>
-      <id>atlassian-public</id>
-      <url>https://m2proxy.atlassian.com/repository/public</url>
-      <releases>
-        <enabled>true</enabled>
-        <checksumPolicy>warn</checksumPolicy>
-      </releases>
-      <snapshots>
-        <checksumPolicy>warn</checksumPolicy>
-      </snapshots>
     </pluginRepository>
   </pluginRepositories>
 
@@ -145,9 +118,20 @@
       <artifactId>jira-rest-java-client-api</artifactId>
       <version>${jira-rest-client.version}</version>
       <exclusions>
+        <!-- Deprecated and not needed at runtime -->
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+        <!-- Provided by Jenkins core -->
         <exclusion>
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
+        </exclusion>
+        <!-- Provided by joda-time-api plugin -->
+        <exclusion>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -157,20 +141,103 @@
       <version>${jira-rest-client.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>org.apache.commons</groupId>
-          <artifactId>commons-lang3</artifactId>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-library</artifactId>
         </exclusion>
+        <exclusion>
+          <groupId>com.atlassian.httpclient</groupId>
+          <artifactId>atlassian-httpclient-plugin</artifactId>
+        </exclusion>
+        <!-- Deprecated and not needed at runtime -->
+        <exclusion>
+          <groupId>com.google.code.findbugs</groupId>
+          <artifactId>jsr305</artifactId>
+        </exclusion>
+        <!-- Provided by Jenkins core -->
         <exclusion>
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>commons-codec</groupId>
+          <artifactId>commons-codec</artifactId>
+        </exclusion>
+        <!-- Provided by joda-time-api plugin -->
+        <exclusion>
+          <groupId>joda-time</groupId>
+          <artifactId>joda-time</artifactId>
+        </exclusion>
+        <!-- Provided by commons-lang3-api plugin -->
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>commons-lang3</artifactId>
+        </exclusion>
+        <!-- Provided by apache-httpcomponents-client-4-api plugin -->
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpasyncclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpasyncclient-cache</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient-cache</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore-nio</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpmime</artifactId>
+        </exclusion>
+        <!-- Provided by jersey2-api plugin -->
+        <exclusion>
+          <groupId>org.codehaus.jettison</groupId>
+          <artifactId>jettison</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-client</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.core</groupId>
+          <artifactId>jersey-common</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-jaxb</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.glassfish.jersey.media</groupId>
+          <artifactId>jersey-media-json-jettison</artifactId>
+        </exclusion>
+        <!-- Provided by Jenkins core -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework</groupId>
           <artifactId>spring-beans</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>javax.activation</groupId>
-          <artifactId>activation</artifactId>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.springframework</groupId>
+          <artifactId>spring-jcl</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -185,9 +252,20 @@
       <artifactId>apache-httpcomponents-client-4-api</artifactId>
     </dependency>
     <dependency>
-      <groupId>com.google.code.gson</groupId>
-      <artifactId>gson</artifactId>
-      <version>2.10.1</version>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang3-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>gson-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>jersey2-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>joda-time-api</artifactId>
     </dependency>
 
   </dependencies>

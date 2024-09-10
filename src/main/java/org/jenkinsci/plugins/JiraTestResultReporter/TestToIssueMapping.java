@@ -15,8 +15,6 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -66,7 +64,6 @@ public class TestToIssueMapping {
      * @param job
      * @param map
      */
-    @SuppressFBWarnings(value = "REC_CATCH_EXCEPTION")
     private void saveMap(Job job, HashMap<String, String> map) {
         try {
             Gson gson = new Gson();

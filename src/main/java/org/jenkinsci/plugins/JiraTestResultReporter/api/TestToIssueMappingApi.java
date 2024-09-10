@@ -1,7 +1,5 @@
 package org.jenkinsci.plugins.JiraTestResultReporter.api;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
@@ -36,7 +34,6 @@ public class TestToIssueMappingApi extends Api {
     }
 
     @Override
-    @SuppressFBWarnings(value = {"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE","NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"})
     public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
         String jobName = req.getParameter("job");
         JsonElement result;
@@ -53,12 +50,8 @@ public class TestToIssueMappingApi extends Api {
             Item item = Jenkins.getActiveInstance().getItem(matrixJobName);
 
             // check if it is matrix project
-            if(item.getClass().equals(MatrixProject.class)) {
+            if (item instanceof MatrixProject) {
                 MatrixProject matrixProject = (MatrixProject) item;
-                if(matrixProject == null) {
-                    rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
-                    return;
-                }
                 result = TestToIssueMapping.getInstance().getMap(matrixProject, matrixSubJobName);
             }
             // else consider job resides in a sub-folder

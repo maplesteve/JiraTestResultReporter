@@ -15,12 +15,11 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Job;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.config.AbstractFields;
@@ -120,7 +119,7 @@ public class JobConfigMapping {
          * See Java documentation for more details.
          * @return this object
          */
-        @SuppressFBWarnings(value = "SE_PRIVATE_READ_RESOLVE_NOT_INHERITED")
+        @SuppressFBWarnings(value = "SE_PRIVATE_READ_RESOLVE_NOT_INHERITED", justification = "TODO needs triage")
         private Object readResolve() {
             compileIssueKeyPattern();
             return this;
