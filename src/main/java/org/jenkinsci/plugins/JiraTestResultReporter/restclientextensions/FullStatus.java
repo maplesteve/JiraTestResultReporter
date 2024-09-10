@@ -15,15 +15,12 @@
  */
 package org.jenkinsci.plugins.JiraTestResultReporter.restclientextensions;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 import com.atlassian.jira.rest.client.api.domain.Status;
 
 /**
  * Created by tuicu.
  * Extension of the Status object, that has information about status category
  */
-@SuppressFBWarnings(value = "HE_EQUALS_NO_HASHCODE")
 public class FullStatus extends Status {
 
     private StatusCategory statusCategory;
