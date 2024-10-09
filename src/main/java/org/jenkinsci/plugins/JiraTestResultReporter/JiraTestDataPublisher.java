@@ -469,6 +469,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         private URI jiraUri = null;
         private String username = null;
         private Secret password = null;
+        private boolean useBearerAuth = false;
         private String defaultSummary;
         private String defaultDescription;
 
@@ -482,6 +483,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         public Secret getPassword() {
             return password;
+        }
+
+        public boolean getUseBearerAuth() {
+            return useBearerAuth;
         }
 
         public String getJiraUrl() {
@@ -536,13 +541,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         public Object readResolve() {
             if (jiraUri != null && username != null && password != null) {
                 AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-                restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
-                restClientExtension = new JiraRestClientExtension(
-                        jiraUri,
-                        new AsynchronousHttpClientFactory()
-                                .createClient(
-                                        jiraUri,
-                                        new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+                if (useBearerAuth) {
+                    BearerAuthenticationHandler handler = new BearerAuthenticationHandler(password.getPlainText());
+                    restClient = factory.create(jiraUri, handler);
+
+                    restClientExtension = new JiraRestClientExtension(
+                            jiraUri,
+                            new AsynchronousHttpClientFactory()
+                                    .createClient(jiraUri, new BearerAuthenticationHandler(password.getPlainText())));
+                } else {
+                    restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
+                    restClientExtension = new JiraRestClientExtension(
+                            jiraUri,
+                            new AsynchronousHttpClientFactory()
+                                    .createClient(
+                                            jiraUri,
+                                            new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+                }
                 tryCreatingStatusToCategoryMap();
             }
             return this;
@@ -575,12 +590,14 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
             username = json.getString("username");
             password = Secret.fromString(json.getString("password"));
+            useBearerAuth = json.getBoolean("useBearerAuth");
             defaultSummary = json.getString("summary");
             defaultDescription = json.getString("description");
 
             if (json.getString("jiraUrl").equals("")
                     || json.getString("username").equals("")
                     || json.getString("password").equals("")) {
+                useBearerAuth = false;
                 restClient = null;
                 restClientExtension = null;
                 save();
@@ -588,12 +605,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             }
 
             AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-            restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
-            restClientExtension = new JiraRestClientExtension(
-                    jiraUri,
-                    new AsynchronousHttpClientFactory()
-                            .createClient(
-                                    jiraUri, new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+            if (useBearerAuth) {
+                BearerAuthenticationHandler handler = new BearerAuthenticationHandler(password.getPlainText());
+                restClient = factory.create(jiraUri, handler);
+
+                restClientExtension = new JiraRestClientExtension(
+                        jiraUri,
+                        new AsynchronousHttpClientFactory()
+                                .createClient(jiraUri, new BearerAuthenticationHandler(password.getPlainText())));
+            } else {
+                restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
+                restClientExtension = new JiraRestClientExtension(
+                        jiraUri,
+                        new AsynchronousHttpClientFactory()
+                                .createClient(
+                                        jiraUri,
+                                        new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+            }
             tryCreatingStatusToCategoryMap();
             save();
             return super.configure(req, json);
@@ -639,11 +667,15 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @param jiraUrl
          * @param username
          * @param password
+         * @param useBearerAuth
          * @return
          */
         @RequirePOST
         public FormValidation doValidateGlobal(
-                @QueryParameter String jiraUrl, @QueryParameter String username, @QueryParameter String password) {
+                @QueryParameter String jiraUrl,
+                @QueryParameter String username,
+                @QueryParameter String password,
+                @QueryParameter boolean useBearerAuth) {
 
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             String serverName;
@@ -657,8 +689,14 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 // JIRA does not offer ways to validate username and password, so we try to query some server
                 // metadata, to see if the configured user is authorized on this server
                 AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-                JiraRestClient restClient =
-                        factory.createWithBasicHttpAuthentication(uri, username, pass.getPlainText());
+                JiraRestClient restClient;
+                if (useBearerAuth) {
+                    BearerAuthenticationHandler handler = new BearerAuthenticationHandler(pass.getPlainText());
+                    restClient = factory.create(uri, handler);
+                } else {
+                    restClient = factory.createWithBasicHttpAuthentication(uri, username, pass.getPlainText());
+                }
+
                 MetadataRestClient client = restClient.getMetadataClient();
                 Promise<ServerInfo> serverInfoPromise = client.getServerInfo();
                 ServerInfo serverInfo = serverInfoPromise.claim();
