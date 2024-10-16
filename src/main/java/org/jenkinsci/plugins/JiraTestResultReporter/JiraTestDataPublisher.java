@@ -152,8 +152,9 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      * Getter for the project associated with this publisher
      * @return
      */
-    private AbstractProject getJobName() {
-        return Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+    private @CheckForNull AbstractProject getJobName() {
+        StaplerRequest currentRequest = Stapler.getCurrentRequest();
+        return currentRequest != null ? currentRequest.findAncestorObject(AbstractProject.class) : null;
     }
 
     private boolean pipelineInvocation = false;

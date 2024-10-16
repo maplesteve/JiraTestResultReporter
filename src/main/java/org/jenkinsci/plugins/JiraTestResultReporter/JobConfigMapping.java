@@ -24,6 +24,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Job;
 import java.io.FileInputStream;
@@ -400,7 +402,10 @@ public class JobConfigMapping {
         save(project, entry);
     }
 
-    private JobConfigEntry getJobConfigEntry(Job project) {
+    private JobConfigEntry getJobConfigEntry(@CheckForNull Job project) {
+        if (project == null) {
+            return null;
+        }
         if (!configMap.containsKey(project.getFullName())) {
             JobConfigEntry entry = load(project);
             if (entry != null) {
