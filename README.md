@@ -1,9 +1,8 @@
-JiraTestResultReporter
-======================
+# JiraTestResultReporter
 
-**Hello! Thank you for your interest in contributing to this plugin! If you were looking for the previous versions, please checkout the 1.x branch**
+## Hello! Thank you for your interest in contributing to this plugin! If you were looking for the previous versions, please checkout the 1.x branch
 
-### How to submit a bug report/feature request
+## How to submit a bug report/feature request
 
 For submitting bug reports and feature requests please use the official [JIRA](https://issues.jenkins-ci.org) for Jenkins and specify in the component field **jiratestresultreporter-plugin** .
 
@@ -17,7 +16,7 @@ In case of bug reports, please specify:
 
 In case of feature requests please describe in detail what would you like this plugin to do and if possible specify your use case for it, so that make sure it is covered by an eventual implementation.
 
-### How to contribute
+## How to contribute
 
 Contributions for this plugin should be in the form of pull requests.
 
@@ -27,23 +26,23 @@ One pull request should solve one JIRA ticket.
 
 For your convenience you should try to use the following workflow:
 
-**Setup workflow**
+### Setup workflow
 
 * Fork on GitHub (click Fork button)
-* Clone to computer, use SSH URL ($ git clone git@github.com:${your_git_username}/JiraTestResultReporter-plugin.git)
-* cd into your repo: ($ cd JiraTestResultReporter-plugin/)
-* Set up remote upstream ($ git remote add upstream git@github.com:jenkinsci/JiraTestResultReporter-plugin.git)
+* Clone to computer, use SSH URL (``` $ git clone git@github.com:${your_git_username}/JiraTestResultReporter-plugin.git```)
+* cd into your repo: (``` $ cd JiraTestResultReporter-plugin/```)
+* Set up remote upstream (``` $ git remote add upstream <git@github.com>:jenkinsci/JiraTestResultReporter-plugin.git```)
 
-**Fixing a bug/Implementing a feature workflow**
+### Fixing a bug/Implementing a feature workflow
 
-* Create a branch for the JIRA issue that you are solving ($ git checkout -b issue/JENKINS-XXXXXX)
+* Create a branch for the JIRA issue that you are solving (``` $ git checkout -b issue/JENKINS-XXXXXX```)
 * Develop on issue branch. [Time passes, the main repository accumulates new commits]
-* Commit changes to your local issue branch. ($ git add . ; git commit -m 'JENKINS-XXXXXX - commit message')
-* Fetch upstream ($ git fetch upstream)
-* Update local master ($ git checkout master; git merge upstream/master)
-* Rebase issue branch ($ git checkout issue/JENKINS-XXXXXX; git rebase master)
+* Commit changes to your local issue branch. (``` $ git add . ; git commit -m 'JENKINS-XXXXXX - commit message'```)
+* Fetch upstream (``` $ git fetch upstream```)
+* Update local master (``` $ git checkout master; git merge upstream/master```)
+* Rebase issue branch (``` $ git checkout issue/JENKINS-XXXXXX; git rebase master```)
 * Repeat the above steps until dev is complete
-* Push branch to GitHub ($ git push)
+* Push branch to GitHub (``` $ git push```)
 * Start your browser, go to your Github repo, switch to "JENKINS-XXXXXX" branch and press the [Pull Request] button.
 
 Please keep the PRs as clean as possible by not mixing two or more issues into a single PR, or refactoring/clean up/typo fixing with solving issue.
@@ -64,7 +63,7 @@ Before doing anything else, the global configurations must be done.
 In order to do these go to **Manage Jenkins -> Configure System -> JiraTestResultReporter** and enter here the JIRA server url the username and password. It is highly recommended that you click the Validate Settings button every time you make any changes here.
 Also from here you can configure the global templates for Summary and Description, by clicking on the Advanced button. These templates will be used to create issues if they are not overridden in the job configuration.
 
-![](img/global-config.png)
+![image of global config settings](img/global-config.png)
 
 ### Job Configuration
 
@@ -122,7 +121,7 @@ Checking **Auto resolve issue** check box will enable an experimental feature. B
 If you check the **Auto unlink issues when test passes** check box, this plugin will automatically unlink issues for all the tests changing to passed in new builds.
 
 
-![](img/job-config1.png)
+![image of job config settings](img/job-config1.png)
 
 Only after configuring the fields above, if you want you can override the **Summary** and **Description** values by clicking the **Advanced** button.
 If you want, here you can configure all available fields for that specific issue type. Due to Jenkins interface development limitations, you have to search for the desired field from the four available types of fields, after clicking the Add Field Configuration.
@@ -131,8 +130,8 @@ If you want, here you can configure all available fields for that specific issue
 
 Finally, I cannot say that this is recommended ( although it is (smile) ), **read the help tag for the Validate Fields** and if the warning there is not a problem for you click the button.
 
-![](img/job-config2.png)
-![](img/job-config3.png)
+![image of job config settings](img/job-config2.png)
+![image of job config settings](img/job-config3.png)
 
 ### Usage
 
@@ -140,18 +139,18 @@ After building the project, go to the test results page. Next to the test cases 
 
 **When creating, linking and unlinking issues, it is recommended that you wait for the page to reload, before doing something else for another test.** Errors will be shown inline, if any.
 
-![](img/test-interface.png)
+![image of jenkins test interface](img/test-interface.png)
 
 Finally, your issues are created and you can see them by clicking the links directly from the Jenkins interface.
 
-![](img/jira-issue.png)
+![image of jira issue example](img/jira-issue.png)
 
 ### Variables
 
 For text fields in the Job Configuration and Global Configuration (Summary and Description only) you can use variables that will expand to the appropriate value when the issue is created in JIRA. You can use all the environment variables defined by Jenkins (see [link](https://wiki.jenkins-ci.org/display/JENKINS/Building+a+software+project)). Additionally, this plugin can expand a set of predefined variables that expose information about the test.
 
-![](img/variables.png)
+![image of available jenkins variables](img/variables.png)
 
 ### Implementation details
 
-![](img/hashmaps.jpg)
+![image of hashmaps everywhere](img/hashmaps.jpg)
