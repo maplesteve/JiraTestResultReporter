@@ -36,6 +36,7 @@ import com.atlassian.jira.rest.client.auth.BasicHttpAuthenticationHandler;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFactory;
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -69,7 +70,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nonnull;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
@@ -81,7 +81,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
@@ -131,6 +131,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return JobConfigMapping.getInstance().getAutoUnlinkIssue(getJobName());
     }
 
+    public boolean getOverrideResolvedIssues() {
+        return JobConfigMapping.getInstance().getOverrideResolvedIssues(getJobName());
+    }
+
     /**
      * Getter for list of attachments by test method identified by its classname and name
      * @param className
@@ -152,8 +156,9 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      * Getter for the project associated with this publisher
      * @return
      */
-    private AbstractProject getJobName() {
-        return Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+    private @CheckForNull AbstractProject getJobName() {
+        StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
+        return currentRequest != null ? currentRequest.findAncestorObject(AbstractProject.class) : null;
     }
 
     private boolean pipelineInvocation = false;
@@ -224,9 +229,9 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 .withConfigs(Util.fixNull(configs))
                 .build();
 
-        if (Stapler.getCurrentRequest() != null) {
+        if (Stapler.getCurrentRequest2() != null) {
             // classic job - e.g. Freestyle project, Matrix project, etc.
-            AbstractProject project = Stapler.getCurrentRequest().findAncestorObject(AbstractProject.class);
+            AbstractProject project = Stapler.getCurrentRequest2().findAncestorObject(AbstractProject.class);
             TestToIssueMapping.getInstance().register(project);
             JobConfigMapping.getInstance().saveConfig(project, getJobConfig());
         } else {
@@ -248,7 +253,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      */
     @Override
     public TestResultAction.Data contributeTestData(
-            Run<?, ?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult)
+            Run<?, ?> run, @NonNull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult)
             throws IOException, InterruptedException {
 
         EnvVars envVars = run.getEnvironment(listener);
@@ -362,15 +367,15 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean cleanJobCacheFile(TaskListener listener, Job job, List<CaseResult> testCaseResults) {
-        boolean cleaUp = false;
+        boolean cleanUp = false;
         try {
-            cleaUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
+            cleanUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
         } catch (RestClientException e) {
             listener.error("Could not do the clean up of the JiraIssueJobConfigs.json\n");
             e.printStackTrace(listener.getLogger());
             throw e;
         }
-        return cleaUp;
+        return cleanUp;
     }
 
     private boolean raiseIssues(
@@ -423,7 +428,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      */
     @Override
     public JiraTestDataPublisherDescriptor getDescriptor() {
-        return (JiraTestDataPublisherDescriptor) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (JiraTestDataPublisherDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**
@@ -469,6 +474,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         private URI jiraUri = null;
         private String username = null;
         private Secret password = null;
+        private boolean useBearerAuth = false;
         private String defaultSummary;
         private String defaultDescription;
 
@@ -482,6 +488,10 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         public Secret getPassword() {
             return password;
+        }
+
+        public boolean getUseBearerAuth() {
+            return useBearerAuth;
         }
 
         public String getJiraUrl() {
@@ -536,13 +546,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         public Object readResolve() {
             if (jiraUri != null && username != null && password != null) {
                 AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-                restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
-                restClientExtension = new JiraRestClientExtension(
-                        jiraUri,
-                        new AsynchronousHttpClientFactory()
-                                .createClient(
-                                        jiraUri,
-                                        new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+                if (useBearerAuth) {
+                    BearerAuthenticationHandler handler = new BearerAuthenticationHandler(password.getPlainText());
+                    restClient = factory.create(jiraUri, handler);
+
+                    restClientExtension = new JiraRestClientExtension(
+                            jiraUri,
+                            new AsynchronousHttpClientFactory()
+                                    .createClient(jiraUri, new BearerAuthenticationHandler(password.getPlainText())));
+                } else {
+                    restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
+                    restClientExtension = new JiraRestClientExtension(
+                            jiraUri,
+                            new AsynchronousHttpClientFactory()
+                                    .createClient(
+                                            jiraUri,
+                                            new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+                }
                 tryCreatingStatusToCategoryMap();
             }
             return this;
@@ -565,7 +585,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @throws FormException
          */
         @Override
-        public boolean configure(StaplerRequest req, JSONObject json) throws FormException {
+        public boolean configure(StaplerRequest2 req, JSONObject json) throws FormException {
 
             try {
                 jiraUri = new URI(json.getString("jiraUrl"));
@@ -575,12 +595,14 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
             username = json.getString("username");
             password = Secret.fromString(json.getString("password"));
+            useBearerAuth = json.getBoolean("useBearerAuth");
             defaultSummary = json.getString("summary");
             defaultDescription = json.getString("description");
 
             if (json.getString("jiraUrl").equals("")
                     || json.getString("username").equals("")
                     || json.getString("password").equals("")) {
+                useBearerAuth = false;
                 restClient = null;
                 restClientExtension = null;
                 save();
@@ -588,12 +610,23 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             }
 
             AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-            restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
-            restClientExtension = new JiraRestClientExtension(
-                    jiraUri,
-                    new AsynchronousHttpClientFactory()
-                            .createClient(
-                                    jiraUri, new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+            if (useBearerAuth) {
+                BearerAuthenticationHandler handler = new BearerAuthenticationHandler(password.getPlainText());
+                restClient = factory.create(jiraUri, handler);
+
+                restClientExtension = new JiraRestClientExtension(
+                        jiraUri,
+                        new AsynchronousHttpClientFactory()
+                                .createClient(jiraUri, new BearerAuthenticationHandler(password.getPlainText())));
+            } else {
+                restClient = factory.createWithBasicHttpAuthentication(jiraUri, username, password.getPlainText());
+                restClientExtension = new JiraRestClientExtension(
+                        jiraUri,
+                        new AsynchronousHttpClientFactory()
+                                .createClient(
+                                        jiraUri,
+                                        new BasicHttpAuthenticationHandler(username, password.getPlainText())));
+            }
             tryCreatingStatusToCategoryMap();
             save();
             return super.configure(req, json);
@@ -627,7 +660,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @throws FormException
          */
         @Override
-        public TestDataPublisher newInstance(StaplerRequest req, JSONObject json) throws FormException {
+        public TestDataPublisher newInstance(StaplerRequest2 req, JSONObject json) throws FormException {
             String projectKey = json.getString("projectKey");
             String issueType = json.getString("issueType");
             metadataCache.removeCacheEntry(projectKey, issueType);
@@ -639,15 +672,20 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @param jiraUrl
          * @param username
          * @param password
+         * @param useBearerAuth
          * @return
          */
         @RequirePOST
         public FormValidation doValidateGlobal(
-                @QueryParameter String jiraUrl, @QueryParameter String username, @QueryParameter String password) {
+                @QueryParameter String jiraUrl,
+                @QueryParameter String username,
+                @QueryParameter String password,
+                @QueryParameter boolean useBearerAuth) {
 
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             String serverName;
             try {
+                // implicit URL validation check
                 new URL(jiraUrl);
                 URI uri = new URI(jiraUrl);
                 if (uri == null) {
@@ -657,8 +695,14 @@ public class JiraTestDataPublisher extends TestDataPublisher {
                 // JIRA does not offer ways to validate username and password, so we try to query some server
                 // metadata, to see if the configured user is authorized on this server
                 AsynchronousJiraRestClientFactory factory = new AsynchronousJiraRestClientFactory();
-                JiraRestClient restClient =
-                        factory.createWithBasicHttpAuthentication(uri, username, pass.getPlainText());
+                JiraRestClient restClient;
+                if (useBearerAuth) {
+                    BearerAuthenticationHandler handler = new BearerAuthenticationHandler(pass.getPlainText());
+                    restClient = factory.create(uri, handler);
+                } else {
+                    restClient = factory.createWithBasicHttpAuthentication(uri, username, pass.getPlainText());
+                }
+
                 MetadataRestClient client = restClient.getMetadataClient();
                 Promise<ServerInfo> serverInfoPromise = client.getServerInfo();
                 ServerInfo serverInfo = serverInfoPromise.claim();
@@ -740,21 +784,24 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @param jsonForm
          * @return
          * @throws FormException
-         * @throws InterruptedException
          */
         @JavaScriptMethod
-        public FormValidation validateFieldConfigs(String jsonForm) throws FormException, InterruptedException {
+        public FormValidation validateFieldConfigs(String jsonForm) throws FormException {
             // extracting the configurations for associated with this plugin (we receive the entire form)
-            StaplerRequest req = Stapler.getCurrentRequest();
+            StaplerRequest2 req = Stapler.getCurrentRequest2();
             JSONObject jsonObject = JSONObject.fromObject(jsonForm);
             JSONObject publishers = jsonObject.getJSONObject("publisher");
             JSONObject jiraPublisherJSON = null;
 
             for (Object o : publishers.keySet()) {
-                if (o.toString().contains(JiraTestDataPublisher.class.getSimpleName())) {
+                if (o.toString().equals("testDataPublishers")) {
                     jiraPublisherJSON = (JSONObject) publishers.get(o);
                     break;
                 }
+            }
+
+            if (jiraPublisherJSON == null) {
+                return FormValidation.error("jiraPublisherJSON is null.\n");
             }
 
             // constructing the objects from json
@@ -801,7 +848,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * @return
          */
         public List getListDescriptors() {
-            return Jenkins.getInstance().getDescriptorList(AbstractFields.class);
+            return Jenkins.get().getDescriptorList(AbstractFields.class);
         }
     }
 }

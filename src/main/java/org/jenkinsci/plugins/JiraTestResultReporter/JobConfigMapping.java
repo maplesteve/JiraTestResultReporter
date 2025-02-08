@@ -24,6 +24,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Job;
 import java.io.FileInputStream;
@@ -116,10 +117,6 @@ public class JobConfigMapping {
             return autoRaiseIssue;
         }
 
-        public boolean getOverrideResolvedIssues() {
-            return overrideResolvedIssues;
-        }
-
         public boolean getAutoResolveIssue() {
             return autoResolveIssue;
         }
@@ -130,6 +127,10 @@ public class JobConfigMapping {
 
         public boolean getAdditionalAttachments() {
             return additionalAttachments;
+        }
+
+        public boolean getOverrideResolvedIssues() {
+            return overrideResolvedIssues;
         }
 
         /**
@@ -157,7 +158,7 @@ public class JobConfigMapping {
     }
 
     /**
-     * Builder fot a JobConfigEntry
+     * Builder for a JobConfigEntry
      */
     public static class JobConfigEntryBuilder extends JobConfigEntry {
         /**
@@ -188,11 +189,6 @@ public class JobConfigMapping {
             return this;
         }
 
-        public JobConfigEntryBuilder withOverrideResolvedIssues(boolean overrideResolvedIssues) {
-            this.overrideResolvedIssues = overrideResolvedIssues;
-            return this;
-        }
-
         public JobConfigEntryBuilder withAutoResolveIssues(boolean autoResolveIssue) {
             this.autoResolveIssue = autoResolveIssue;
             return this;
@@ -205,6 +201,11 @@ public class JobConfigMapping {
 
         public JobConfigEntryBuilder withAdditionalAttachments(boolean additionalAttachments) {
             this.additionalAttachments = additionalAttachments;
+            return this;
+        }
+
+        public JobConfigEntryBuilder withOverrideResolvedIssues(boolean overrideResolvedIssues) {
+            this.overrideResolvedIssues = overrideResolvedIssues;
             return this;
         }
 
@@ -261,7 +262,7 @@ public class JobConfigMapping {
     private JobConfigMapping() {
         configMap = new HashMap<String, JobConfigEntry>();
 
-        for (Job project : Jenkins.getInstance().getItems(Job.class)) {
+        for (Job project : Jenkins.get().getItems(Job.class)) {
             JobConfigEntry entry = load(project);
             if (entry != null) {
                 configMap.put(project.getFullName(), entry);
@@ -393,6 +394,9 @@ public class JobConfigMapping {
      * Method for setting the last configuration made for a project
      */
     public synchronized void saveConfig(Job project, JobConfigEntry entry) {
+        if (project == null) {
+            return;
+        }
         if (entry instanceof JobConfigEntryBuilder) {
             entry = ((JobConfigEntryBuilder) entry).build();
         }
@@ -400,7 +404,10 @@ public class JobConfigMapping {
         save(project, entry);
     }
 
-    private JobConfigEntry getJobConfigEntry(Job project) {
+    private JobConfigEntry getJobConfigEntry(@CheckForNull Job project) {
+        if (project == null) {
+            return null;
+        }
         if (!configMap.containsKey(project.getFullName())) {
             JobConfigEntry entry = load(project);
             if (entry != null) {
@@ -445,11 +452,6 @@ public class JobConfigMapping {
         return entry != null ? entry.getAutoRaiseIssue() : false;
     }
 
-    public boolean getOverrideResolvedIssues(Job project) {
-        JobConfigEntry entry = getJobConfigEntry(project);
-        return entry != null ? entry.getOverrideResolvedIssues() : false;
-    }
-
     public boolean getAutoResolveIssue(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoResolveIssue() : false;
@@ -463,6 +465,11 @@ public class JobConfigMapping {
     public boolean getAdditionalAttachments(Job project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAdditionalAttachments() : false;
+    }
+
+    public boolean getOverrideResolvedIssues(Job project) {
+        JobConfigEntry entry = getJobConfigEntry(project);
+        return entry != null ? entry.getOverrideResolvedIssues() : false;
     }
 
     /**

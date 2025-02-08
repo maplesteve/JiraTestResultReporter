@@ -93,8 +93,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     public JiraTestAction(JiraTestData testData, CaseResult test) {
         project = initProject();
         if (project instanceof MatrixProject) {
-            job = (Job) Jenkins.getInstance()
-                    .getItemByFullName(testData.getEnvVars().get("JOB_NAME"));
+            job = (Job) Jenkins.get().getItemByFullName(testData.getEnvVars().get("JOB_NAME"));
         } else {
             job = project;
         }
@@ -130,11 +129,11 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      * @return
      */
     private Job initProject() {
-        if (Stapler.getCurrentRequest() == null) {
+        if (Stapler.getCurrentRequest2() == null) {
             return null;
         }
 
-        List<Ancestor> ancestors = Stapler.getCurrentRequest().getAncestors();
+        List<Ancestor> ancestors = Stapler.getCurrentRequest2().getAncestors();
         for (Ancestor ancestor : ancestors) {
             if (ancestor.getObject() instanceof AbstractProject) {
                 return (AbstractProject) ancestor.getObject();
@@ -239,7 +238,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      */
     @Override
     public Descriptor<JiraTestAction> getDescriptor() {
-        return (JiraTestActionDescriptor) Jenkins.getInstance().getDescriptorOrDie(getClass());
+        return (JiraTestActionDescriptor) Jenkins.get().getDescriptorOrDie(getClass());
     }
 
     /**

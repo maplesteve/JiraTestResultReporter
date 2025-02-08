@@ -57,7 +57,7 @@ public class TestToIssueMapping {
      */
     private TestToIssueMapping() {
         jobsMap = new HashMap<String, HashMap<String, String>>();
-        for (Job job : Jenkins.getInstance().getItems(Job.class)) {
+        for (Job job : Jenkins.get().getItems(Job.class)) {
             register(job);
         }
     }
@@ -154,6 +154,10 @@ public class TestToIssueMapping {
      * @param job
      */
     public void register(Job job) {
+        if (job == null) {
+            return;
+        }
+
         if (job instanceof MatrixProject) {
             for (Job child : ((MatrixProject) job).getAllJobs()) {
                 if (child instanceof MatrixProject) {

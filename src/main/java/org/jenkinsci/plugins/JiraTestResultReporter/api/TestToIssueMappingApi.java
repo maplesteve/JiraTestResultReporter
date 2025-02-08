@@ -7,13 +7,13 @@ import hudson.matrix.MatrixProject;
 import hudson.model.Api;
 import hudson.model.Item;
 import hudson.model.Job;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletResponse;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.JiraTestResultReporter.TestToIssueMapping;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * Created by tuicu on 12/08/16.
@@ -31,7 +31,7 @@ public class TestToIssueMappingApi extends Api {
     }
 
     @Override
-    public void doJson(StaplerRequest req, StaplerResponse rsp) throws IOException, ServletException {
+    public void doJson(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException, ServletException {
         String jobName = req.getParameter("job");
         JsonElement result;
 
@@ -44,7 +44,7 @@ public class TestToIssueMappingApi extends Api {
         if (jobName.contains("/")) {
             String matrixJobName = jobName.split("/")[0];
             String matrixSubJobName = jobName.split("/")[1];
-            Item item = Jenkins.getActiveInstance().getItem(matrixJobName);
+            Item item = Jenkins.get().getItem(matrixJobName);
 
             // check if it is matrix project
             if (item instanceof MatrixProject) {
@@ -53,7 +53,7 @@ public class TestToIssueMappingApi extends Api {
             }
             // else consider job resides in a sub-folder
             else {
-                Job job = (Job) Jenkins.getActiveInstance().getItemByFullName(jobName);
+                Job job = (Job) Jenkins.get().getItemByFullName(jobName);
                 if (job == null) {
                     rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
                     return;
@@ -62,7 +62,7 @@ public class TestToIssueMappingApi extends Api {
             }
             // top level job (either matrix, freestyle or maven
         } else {
-            Job job = (Job) Jenkins.getActiveInstance().getItem(jobName);
+            Job job = (Job) Jenkins.get().getItem(jobName);
             if (job == null) {
                 rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;
