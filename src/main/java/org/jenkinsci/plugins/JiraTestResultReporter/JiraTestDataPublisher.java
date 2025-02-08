@@ -367,15 +367,15 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean cleanJobCacheFile(TaskListener listener, Job job, List<CaseResult> testCaseResults) {
-        boolean cleaUp = false;
+        boolean cleanUp = false;
         try {
-            cleaUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
+            cleanUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
         } catch (RestClientException e) {
             listener.error("Could not do the clean up of the JiraIssueJobConfigs.json\n");
             e.printStackTrace(listener.getLogger());
             throw e;
         }
-        return cleaUp;
+        return cleanUp;
     }
 
     private boolean raiseIssues(
@@ -685,6 +685,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             Jenkins.get().checkPermission(Jenkins.ADMINISTER);
             String serverName;
             try {
+                // implicit URL validation check
                 new URL(jiraUrl);
                 URI uri = new URI(jiraUrl);
                 if (uri == null) {
