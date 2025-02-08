@@ -51,8 +51,8 @@
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.479</jenkins.baseline>
-    <jenkins.version>${jenkins.baseline}.1</jenkins.version>
-    <jira-rest-client.version>5.2.7</jira-rest-client.version>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <jira-rest-client.version>5.2.8-platform7-12284590</jira-rest-client.version>
     <fugue.version>4.7.2</fugue.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <spotbugs.threshold>High</spotbugs.threshold>
