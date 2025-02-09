@@ -156,7 +156,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
      * Getter for the project associated with this publisher
      * @return
      */
-    private @CheckForNull AbstractProject getJobName() {
+    private @CheckForNull AbstractProject<?, ?> getJobName() {
         StaplerRequest2 currentRequest = Stapler.getCurrentRequest2();
         return currentRequest != null ? currentRequest.findAncestorObject(AbstractProject.class) : null;
     }
@@ -231,7 +231,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
 
         if (Stapler.getCurrentRequest2() != null) {
             // classic job - e.g. Freestyle project, Matrix project, etc.
-            AbstractProject project = Stapler.getCurrentRequest2().findAncestorObject(AbstractProject.class);
+            AbstractProject<?, ?> project = Stapler.getCurrentRequest2().findAncestorObject(AbstractProject.class);
             TestToIssueMapping.getInstance().register(project);
             JobConfigMapping.getInstance().saveConfig(project, getJobConfig());
         } else {
@@ -257,8 +257,8 @@ public class JiraTestDataPublisher extends TestDataPublisher {
             throws IOException, InterruptedException {
 
         EnvVars envVars = run.getEnvironment(listener);
-        Job job = run.getParent();
-        Job project;
+        Job<?, ?> job = run.getParent();
+        Job<?, ?> project;
         if (job instanceof MatrixConfiguration) {
             project = ((MatrixConfiguration) job).getParent();
         } else {
@@ -312,7 +312,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean unlinkIssuesForPassedTests(
-            TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
         boolean unlinked = false;
         for (CaseResult test : testCaseResults) {
             if (test.isPassed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
@@ -327,7 +327,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean resolveIssues(
-            TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
 
         boolean solved = false;
         try {
@@ -366,7 +366,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
         return solved;
     }
 
-    private boolean cleanJobCacheFile(TaskListener listener, Job job, List<CaseResult> testCaseResults) {
+    private boolean cleanJobCacheFile(TaskListener listener, Job<?, ?> job, List<CaseResult> testCaseResults) {
         boolean cleanUp = false;
         try {
             cleanUp = JiraUtils.cleanJobCacheFile(testCaseResults, job);
@@ -379,7 +379,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean raiseIssues(
-            TaskListener listener, Job project, Job job, EnvVars envVars, List<CaseResult> testCaseResults) {
+            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
         boolean raised = false;
         try {
             for (CaseResult test : testCaseResults) {

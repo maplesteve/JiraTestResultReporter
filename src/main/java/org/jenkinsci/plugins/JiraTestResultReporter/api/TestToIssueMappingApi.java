@@ -53,7 +53,7 @@ public class TestToIssueMappingApi extends Api {
             }
             // else consider job resides in a sub-folder
             else {
-                Job job = (Job) Jenkins.get().getItemByFullName(jobName);
+                Job<?, ?> job = (Job<?, ?>) Jenkins.get().getItemByFullName(jobName);
                 if (job == null) {
                     rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
                     return;
@@ -62,7 +62,7 @@ public class TestToIssueMappingApi extends Api {
             }
             // top level job (either matrix, freestyle or maven
         } else {
-            Job job = (Job) Jenkins.get().getItem(jobName);
+            Job<?, ?> job = (Job<?, ?>) Jenkins.get().getItem(jobName);
             if (job == null) {
                 rsp.sendError(HttpServletResponse.SC_NOT_FOUND);
                 return;

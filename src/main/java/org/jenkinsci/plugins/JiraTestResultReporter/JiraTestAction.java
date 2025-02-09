@@ -50,8 +50,8 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     private String issueStatus;
     private String statusColor;
     private String issueSummary;
-    private Job job; // the same as project if it's not a matrix build
-    private Job project;
+    private Job<?, ?> job; // the same as project if it's not a matrix build
+    private Job<?, ?> project;
 
     /**
      * Getter for issue status, called from issueStatus.jelly
@@ -93,7 +93,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
     public JiraTestAction(JiraTestData testData, CaseResult test) {
         project = initProject();
         if (project instanceof MatrixProject) {
-            job = (Job) Jenkins.get().getItemByFullName(testData.getEnvVars().get("JOB_NAME"));
+            job = (Job<?, ?>) Jenkins.get().getItemByFullName(testData.getEnvVars().get("JOB_NAME"));
         } else {
             job = project;
         }
@@ -128,7 +128,7 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
      * Method for initializing the project. Used in constructor only.
      * @return
      */
-    private Job initProject() {
+    private Job<?, ?> initProject() {
         if (Stapler.getCurrentRequest2() == null) {
             return null;
         }
@@ -136,14 +136,14 @@ public class JiraTestAction extends TestAction implements ExtensionPoint, Descri
         List<Ancestor> ancestors = Stapler.getCurrentRequest2().getAncestors();
         for (Ancestor ancestor : ancestors) {
             if (ancestor.getObject() instanceof AbstractProject) {
-                return (AbstractProject) ancestor.getObject();
+                return (AbstractProject<?, ?>) ancestor.getObject();
             }
         }
 
-        Job lastAncestor = null;
+        Job<?, ?> lastAncestor = null;
         for (Ancestor ancestor : ancestors) {
             if (ancestor.getObject() instanceof Job) {
-                lastAncestor = (Job) ancestor.getObject();
+                lastAncestor = (Job<?, ?>) ancestor.getObject();
             }
         }
         return lastAncestor;

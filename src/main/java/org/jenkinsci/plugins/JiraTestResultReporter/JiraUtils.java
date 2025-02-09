@@ -117,11 +117,11 @@ public class JiraUtils {
         return errorMessages.toString();
     }
 
-    public static String createIssue(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
+    public static String createIssue(Job<?, ?> job, EnvVars envVars, CaseResult test) throws RestClientException {
         return createIssue(job, job, envVars, test, JiraIssueTrigger.JOB, Collections.emptyList());
     }
 
-    public static boolean cleanJobCacheFile(List<CaseResult> testCaseResults, Job testJob) {
+    public static boolean cleanJobCacheFile(List<CaseResult> testCaseResults, Job<?, ?> testJob) {
         List<String> testNames = testCaseResults.stream()
                 .filter(CaseResult::isFailed)
                 .map(CaseResult::getId)
@@ -153,7 +153,7 @@ public class JiraUtils {
     }
 
     public static String createIssue(
-            Job job, Job project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger, List<String> attachments)
+            Job<?, ?> job, Job<?, ?> project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger, List<String> attachments)
             throws RestClientException {
         synchronized (test.getId()) { // avoid creating duplicated issues
             if (TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
@@ -194,7 +194,7 @@ public class JiraUtils {
      * @return related issue keys from issue map or from Jira server
      * @throws RestClientException
      */
-    public static Set<String> searchIssueKeys(Job job, EnvVars envVars, CaseResult test) throws RestClientException {
+    public static Set<String> searchIssueKeys(Job<?, ?> job, EnvVars envVars, CaseResult test) throws RestClientException {
         synchronized (test.getId()) {
             Set<String> issueKeys = new HashSet<>();
             String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());
@@ -215,7 +215,7 @@ public class JiraUtils {
     }
 
     private static IssueInput createIssueInput(
-            Job project, TestResult test, EnvVars envVars, JiraIssueTrigger trigger) {
+            Job<?, ?> project, TestResult test, EnvVars envVars, JiraIssueTrigger trigger) {
         final IssueInputBuilder newIssueBuilder = new IssueInputBuilder(
                 JobConfigMapping.getInstance().getProjectKey(project),
                 JobConfigMapping.getInstance().getIssueType(project));
@@ -304,7 +304,7 @@ public class JiraUtils {
      * @param envVars the environment variables
      * @return a SearchResult. Empty SearchResult means nothing was found.
      */
-    public static SearchResult findIssues(Job project, TestResult test, EnvVars envVars, IssueInput issueInput)
+    public static SearchResult findIssues(Job<?, ?> project, TestResult test, EnvVars envVars, IssueInput issueInput)
             throws RestClientException {
         String projectKey = JobConfigMapping.getInstance().getProjectKey(project);
         FieldInput fi = JiraTestDataPublisher.JiraTestDataPublisherDescriptor.templates
