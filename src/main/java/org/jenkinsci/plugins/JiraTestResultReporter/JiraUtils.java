@@ -153,7 +153,12 @@ public class JiraUtils {
     }
 
     public static String createIssue(
-            Job<?, ?> job, Job<?, ?> project, EnvVars envVars, CaseResult test, JiraIssueTrigger trigger, List<String> attachments)
+            Job<?, ?> job,
+            Job<?, ?> project,
+            EnvVars envVars,
+            CaseResult test,
+            JiraIssueTrigger trigger,
+            List<String> attachments)
             throws RestClientException {
         synchronized (test.getId()) { // avoid creating duplicated issues
             if (TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
@@ -194,7 +199,8 @@ public class JiraUtils {
      * @return related issue keys from issue map or from Jira server
      * @throws RestClientException
      */
-    public static Set<String> searchIssueKeys(Job<?, ?> job, EnvVars envVars, CaseResult test) throws RestClientException {
+    public static Set<String> searchIssueKeys(Job<?, ?> job, EnvVars envVars, CaseResult test)
+            throws RestClientException {
         synchronized (test.getId()) {
             Set<String> issueKeys = new HashSet<>();
             String issueKey = TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId());

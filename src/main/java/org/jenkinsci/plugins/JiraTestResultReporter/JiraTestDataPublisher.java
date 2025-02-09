@@ -37,6 +37,7 @@ import com.atlassian.jira.rest.client.internal.async.AsynchronousHttpClientFacto
 import com.atlassian.jira.rest.client.internal.async.AsynchronousJiraRestClientFactory;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.DescriptorExtensionList;
 import hudson.EnvVars;
 import hudson.Extension;
 import hudson.FilePath;
@@ -312,7 +313,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean unlinkIssuesForPassedTests(
-            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
+            TaskListener listener,
+            Job<?, ?> project,
+            Job<?, ?> job,
+            EnvVars envVars,
+            List<CaseResult> testCaseResults) {
         boolean unlinked = false;
         for (CaseResult test : testCaseResults) {
             if (test.isPassed() && TestToIssueMapping.getInstance().getTestIssueKey(job, test.getId()) != null) {
@@ -327,8 +332,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean resolveIssues(
-            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
-
+            TaskListener listener,
+            Job<?, ?> project,
+            Job<?, ?> job,
+            EnvVars envVars,
+            List<CaseResult> testCaseResults) {
         boolean solved = false;
         try {
             for (CaseResult test : testCaseResults) {
@@ -379,7 +387,11 @@ public class JiraTestDataPublisher extends TestDataPublisher {
     }
 
     private boolean raiseIssues(
-            TaskListener listener, Job<?, ?> project, Job<?, ?> job, EnvVars envVars, List<CaseResult> testCaseResults) {
+            TaskListener listener,
+            Job<?, ?> project,
+            Job<?, ?> job,
+            EnvVars envVars,
+            List<CaseResult> testCaseResults) {
         boolean raised = false;
         try {
             for (CaseResult test : testCaseResults) {
@@ -847,7 +859,7 @@ public class JiraTestDataPublisher extends TestDataPublisher {
          * Getter for the descriptors required for the hetero-list in job config page (config.jelly)
          * @return
          */
-        public List getListDescriptors() {
+        public DescriptorExtensionList<AbstractFields, ?> getListDescriptors() {
             return Jenkins.get().getDescriptorList(AbstractFields.class);
         }
     }
