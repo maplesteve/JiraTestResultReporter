@@ -113,8 +113,9 @@ public class MetadataCache {
         private void listInfo(Map.Entry<String, CimFieldInfo> entry) {
             System.out.println(entry.getValue().getName() + " :: "
                     + entry.getValue().getSchema().getType());
-            if (entry.getValue().getAllowedValues() != null) {
-                for (Object o : entry.getValue().getAllowedValues()) {
+            Iterable<?> allowedValues = entry.getValue().getAllowedValues();
+            if (allowedValues != null) {
+                for (Object o : allowedValues) {
                     System.out.println("\t" + o);
                 }
             }
@@ -204,8 +205,9 @@ public class MetadataCache {
     private void listInfo(Map.Entry<String, CimFieldInfo> entry) {
         System.out.println(entry.getValue().getName() + " :: "
                 + entry.getValue().getSchema().getType());
-        if (entry.getValue().getAllowedValues() != null) {
-            for (Object o : entry.getValue().getAllowedValues()) {
+        Iterable<?> allowedValues = entry.getValue().getAllowedValues();
+        if (allowedValues != null) {
+            for (Object o : allowedValues) {
                 System.out.println("\t" + o);
             }
         }

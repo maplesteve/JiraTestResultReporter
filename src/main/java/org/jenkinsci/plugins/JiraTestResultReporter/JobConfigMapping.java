@@ -262,7 +262,7 @@ public class JobConfigMapping {
     private JobConfigMapping() {
         configMap = new HashMap<String, JobConfigEntry>();
 
-        for (Job project : Jenkins.get().getItems(Job.class)) {
+        for (Job<?, ?> project : Jenkins.get().getItems(Job.class)) {
             JobConfigEntry entry = load(project);
             if (entry != null) {
                 configMap.put(project.getFullName(), entry);
@@ -275,11 +275,11 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    private String getPathToFile(Job project) {
+    private String getPathToFile(Job<?, ?> project) {
         return project.getRootDir().toPath().resolve(CONFIGS_FILE).toString();
     }
 
-    private String getPathToJsonFile(Job project) {
+    private String getPathToJsonFile(Job<?, ?> project) {
         return project.getRootDir().toPath().resolve(CONFIGS_FILE).toString() + ".json";
     }
 
@@ -289,7 +289,7 @@ public class JobConfigMapping {
      * @param project
      * @return the loaded JobConfigEntry, or null if there was no file, or it could not be loaded
      */
-    private JobConfigEntry loadBackwardsCompatible(Job project) {
+    private JobConfigEntry loadBackwardsCompatible(Job<?, ?> project) {
         try {
             FileInputStream fileIn = new FileInputStream(getPathToFile(project));
             ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -317,7 +317,7 @@ public class JobConfigMapping {
      * @param project
      * @return the loaded JobConfigEntry, or null if there was no file, or it could not be loaded
      */
-    private JobConfigEntry load(Job project) {
+    private JobConfigEntry load(Job<?, ?> project) {
         JobConfigEntry entry = null;
         try {
             Gson gson = new GsonBuilder()
@@ -345,7 +345,7 @@ public class JobConfigMapping {
     /**
      * Method for saving the map, called every time the map changes
      */
-    private void save(Job project, JobConfigEntry entry) {
+    private void save(Job<?, ?> project, JobConfigEntry entry) {
         try {
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(AbstractFields.class, new FieldConfigsJsonAdapter())
@@ -369,7 +369,7 @@ public class JobConfigMapping {
      * @param configs
      */
     public synchronized void saveConfig(
-            Job project,
+            Job<?, ?> project,
             String projectKey,
             Long issueType,
             List<AbstractFields> configs,
@@ -393,7 +393,7 @@ public class JobConfigMapping {
     /**
      * Method for setting the last configuration made for a project
      */
-    public synchronized void saveConfig(Job project, JobConfigEntry entry) {
+    public synchronized void saveConfig(Job<?, ?> project, JobConfigEntry entry) {
         if (project == null) {
             return;
         }
@@ -404,7 +404,7 @@ public class JobConfigMapping {
         save(project, entry);
     }
 
-    private JobConfigEntry getJobConfigEntry(@CheckForNull Job project) {
+    private JobConfigEntry getJobConfigEntry(@CheckForNull Job<?, ?> project) {
         if (project == null) {
             return null;
         }
@@ -422,7 +422,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public List<AbstractFields> getConfig(Job project) {
+    public List<AbstractFields> getConfig(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getConfigs() : null;
     }
@@ -432,7 +432,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public Long getIssueType(Job project) {
+    public Long getIssueType(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getIssueType() : null;
     }
@@ -442,32 +442,32 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public String getProjectKey(Job project) {
+    public String getProjectKey(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getProjectKey() : null;
     }
 
-    public boolean getAutoRaiseIssue(Job project) {
+    public boolean getAutoRaiseIssue(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoRaiseIssue() : false;
     }
 
-    public boolean getAutoResolveIssue(Job project) {
+    public boolean getAutoResolveIssue(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoResolveIssue() : false;
     }
 
-    public boolean getAutoUnlinkIssue(Job project) {
+    public boolean getAutoUnlinkIssue(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAutoUnlinkIssue() : false;
     }
 
-    public boolean getAdditionalAttachments(Job project) {
+    public boolean getAdditionalAttachments(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getAdditionalAttachments() : false;
     }
 
-    public boolean getOverrideResolvedIssues(Job project) {
+    public boolean getOverrideResolvedIssues(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getOverrideResolvedIssues() : false;
     }
@@ -477,7 +477,7 @@ public class JobConfigMapping {
      * @param project
      * @return
      */
-    public Pattern getIssueKeyPattern(Job project) {
+    public Pattern getIssueKeyPattern(Job<?, ?> project) {
         JobConfigEntry entry = getJobConfigEntry(project);
         return entry != null ? entry.getIssueKeyPattern() : null;
     }

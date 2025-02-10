@@ -57,17 +57,17 @@ public class TestToIssueMapping {
      */
     private TestToIssueMapping() {
         jobsMap = new HashMap<String, HashMap<String, String>>();
-        for (Job job : Jenkins.get().getItems(Job.class)) {
+        for (Job<?, ?> job : Jenkins.get().getItems(Job.class)) {
             register(job);
         }
     }
 
     /**
-     * Method for saveing the test to issue HashMap for the job
+     * Method for saving the test to issue HashMap for the job
      * @param job
      * @param map
      */
-    private void saveMap(Job job, HashMap<String, String> map) {
+    private void saveMap(Job<?, ?> job, HashMap<String, String> map) {
         try {
             Gson gson = new Gson();
             FileOutputStream fileOut = new FileOutputStream(getPathToFileMap(job) + ".json");
@@ -86,7 +86,7 @@ public class TestToIssueMapping {
      * @param job
      * @return
      */
-    private String getPathToFileMap(Job job) {
+    private String getPathToFileMap(Job<?, ?> job) {
         return job.getRootDir().toPath().resolve(MAP_FILE_NAME).toString();
     }
 
@@ -96,7 +96,7 @@ public class TestToIssueMapping {
      * @param job
      * @return the loaded test to issue HashMap, or null if there was no file, or it could not be loaded
      */
-    private HashMap<String, String> loadBackwardsCompatible(Job job) {
+    private HashMap<String, String> loadBackwardsCompatible(Job<?, ?> job) {
         try {
             FileInputStream fileIn = new FileInputStream(getPathToFileMap(job));
             ObjectInputStream in = new ObjectInputStream(fileIn);
@@ -123,7 +123,7 @@ public class TestToIssueMapping {
      * @param job
      * @return the loaded test to issue HashMap
      */
-    private HashMap<String, String> loadMap(Job job) {
+    private HashMap<String, String> loadMap(Job<?, ?> job) {
         HashMap<String, String> testToIssue = null;
         try {
             Gson gson = new Gson();
@@ -153,13 +153,13 @@ public class TestToIssueMapping {
      * Method for registering a job
      * @param job
      */
-    public void register(Job job) {
+    public void register(Job<?, ?> job) {
         if (job == null) {
             return;
         }
 
         if (job instanceof MatrixProject) {
-            for (Job child : ((MatrixProject) job).getAllJobs()) {
+            for (Job<?, ?> child : ((MatrixProject) job).getAllJobs()) {
                 if (child instanceof MatrixProject) {
                     // parent job
                     continue;
@@ -188,7 +188,7 @@ public class TestToIssueMapping {
      * @param testId
      * @param issueKey
      */
-    public void addTestToIssueMapping(Job job, String testId, String issueKey) {
+    public void addTestToIssueMapping(Job<?, ?> job, String testId, String issueKey) {
         HashMap<String, String> jobMap = jobsMap.get(job.getFullName());
         if (jobMap == null) {
             JiraUtils.log("ERROR: Unregistered job " + job.getFullName());
@@ -208,7 +208,7 @@ public class TestToIssueMapping {
      * @param testId
      * @param issueKey
      */
-    public void removeTestToIssueMapping(Job job, String testId, String issueKey) {
+    public void removeTestToIssueMapping(Job<?, ?> job, String testId, String issueKey) {
         HashMap<String, String> jobMap = jobsMap.get(job.getFullName());
         if (jobMap == null) {
             JiraUtils.log("ERROR: Unregistered job " + job.getFullName());
@@ -229,7 +229,7 @@ public class TestToIssueMapping {
      * @param testId
      * @return
      */
-    public String getTestIssueKey(Job job, String testId) {
+    public String getTestIssueKey(Job<?, ?> job, String testId) {
         HashMap<String, String> jobMap = jobsMap.get(job.getFullName());
         if (jobMap == null) {
             JiraUtils.logWarning("ERROR: Unregistered job " + job.getFullName());
@@ -242,7 +242,7 @@ public class TestToIssueMapping {
     }
 
     public JsonElement getMap(MatrixProject matrixProject, String subJobName) {
-        Job job = matrixProject.getItem(subJobName);
+        Job<?, ?> job = matrixProject.getItem(subJobName);
         if (job == null) {
             return null;
         }
@@ -251,7 +251,7 @@ public class TestToIssueMapping {
 
     public JsonElement getMap(MatrixProject matrixProject) {
         JsonObject jsonObject = new JsonObject();
-        for (Job job : matrixProject.getAllJobs()) {
+        for (Job<?, ?> job : matrixProject.getAllJobs()) {
             if (matrixProject == job) {
                 continue;
             }
@@ -260,7 +260,7 @@ public class TestToIssueMapping {
         return jsonObject;
     }
 
-    public JsonElement getMap(Job job) {
+    public JsonElement getMap(Job<?, ?> job) {
         if (job instanceof MatrixProject) {
             return getMap((MatrixProject) job);
         } else {
