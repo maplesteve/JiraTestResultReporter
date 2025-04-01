@@ -286,7 +286,7 @@ public class JiraUtils {
             try {
                 if (attachmentStorage.exists()) {
                     FilePath attachmentPath =
-                            AttachmentPublisher.getAttachmentPath(attachmentStorage, test.getClassName());
+                            AttachmentPublisher.getAttachmentPath(attachmentStorage, test.getClassName(), test.getName());
                     for (FilePath file : attachmentPath.list()) {
                         if (attachments.contains(file.getName())) {
                             issueClient
