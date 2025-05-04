@@ -1,6 +1,8 @@
 JiraTestResultReporter
 ======================
 
+# This repo was the initial version of the plugin which I created years ago. The maintained version lives here: https://github.com/jenkinsci/JiraTestResultReporter-plugin
+
 **DISCLAIMER**
 
 **Though I tested this plugin on my Jenkins installation, I can't tell for sure that this works as intended. Maybe you want to check the code before using this plugin. Don't blame me, if your Jira gets filled with false issues (which is basically the worst thing, that this plugin can do.)**
